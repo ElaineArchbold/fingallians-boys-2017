@@ -1432,30 +1432,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                 <p className="squad-desc">{w.squad.desc}</p>
                 <div className="squad-cta">👥 Get 3–4 lads together — this is your highest scoring task!</div>
                 {/* Three drill videos for this week */}
-                <div style={{display:"flex",gap:8,marginBottom:12}}>
-                  {[
-                    ...w.speed.map(s => ({ ytId: s.youtube_id, label: s.label.replace(/^⚡\s*/,"") })),
-                    ...w.skills.map(s => ({ ytId: s.youtube_id, label: s.label.replace(/^[🏑⚽]\s*/,"") })),
-                  ].slice(0,3).map((v, idx) => {
-                    const vidKey = `squad-${idx}`;
-                    const thumbUrl = v.ytId && !v.ytId.startsWith("Demo")
-                      ? `https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`
-                      : null;
-                    return (
-                      <div key={idx} style={{flex:1,display:"flex",flexDirection:"column",gap:4}}>
-                        <div style={{position:"relative",paddingBottom:"56.25%",borderRadius:8,overflow:"hidden",background:"#000",cursor:"pointer"}}
-                          onClick={() => setPlayingVideo(playingVideo === vidKey ? null : vidKey)}>
-                          {playingVideo === vidKey ? (
-                            <iframe
-                              style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
-                              src={`https://www.youtube.com/embed/${v.ytId}?autoplay=1&rel=0`}
-                              allow="autoplay; encrypted-media" allowFullScreen />
-                          ) : thumbUrl ? (
-                            <>
-                              <img src={thumbUrl} alt="" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover"}} />
-                              <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.2)"}} />
-                              <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:28,height:28,borderRadius:"50%",background:"rgba(255,0,0,0.9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>▶</div>
-                            </>
+</>
                           ) : (
                             <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,#4a0a0e,#1a0405)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🎬</div>
                           )}
@@ -2652,10 +2629,7 @@ function DashboardTab({ allPlayers }) {
             );
           })}
         </div>
-
-        <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede",marginBottom:14}}>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:10}}>FITNESS TESTING</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             {[
               {label:"Pre-summer timed", value:stats.preTimes,  color:"#1565c0"},
               {label:"Post-summer timed",value:stats.postTimes, color:"#2e7d32"},
@@ -2826,10 +2800,8 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
       </div>
 
       <div className="card" style={{marginTop:20}}>
-        <div className="card-hd"><h3>Adding YouTube Videos</h3></div>
         <div className="card-bd" style={{fontSize:13,color:"var(--mid)",lineHeight:1.7}}>
           To add real drill videos, edit the <code style={{background:"#f0f0f0",padding:"1px 5px",borderRadius:4}}>WEEKS</code> array at the top of this file.
-          Find the YouTube video, copy the ID after <code style={{background:"#f0f0f0",padding:"1px 5px",borderRadius:4}}>?v=</code> and replace the existing ID.
           <div style={{marginTop:10,padding:"10px 12px",background:"#f0f7f1",borderRadius:8}}>
             e.g. youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong> → use <strong>dQw4w9WgXcQ</strong>
           </div>
@@ -2838,4 +2810,3 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
     </div>
   );
 }
-
