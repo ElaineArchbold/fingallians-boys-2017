@@ -1438,7 +1438,6 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                   ].slice(0,3).map((v, idx) => {
                     const vidKey = `squad-${idx}`;
                     const thumbUrl = v.ytId && !v.ytId.startsWith("Demo")
-                      ? `https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`
                       : null;
                     return (
                       <div key={idx} style={{flex:1,display:"flex",flexDirection:"column",gap:4}}>
@@ -1447,7 +1446,6 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                           {playingVideo === vidKey ? (
                             <iframe
                               style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
-                              src={`https://www.youtube.com/embed/${v.ytId}?autoplay=1&rel=0`}
                               allow="autoplay; encrypted-media" allowFullScreen />
                           ) : thumbUrl ? (
                             <>
@@ -1483,7 +1481,6 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
 function VideoEmbed({ ytId, playing, onPlay, dark }) {
   const isPlaceholder = !ytId || ytId.startsWith("Demo");
   const thumbUrl = ytId && !isPlaceholder
-    ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
     : null;
 
   return (
@@ -2652,21 +2649,7 @@ function DashboardTab({ allPlayers }) {
           })}
         </div>
 
-        <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede",marginBottom:14}}>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:10}}>FITNESS TESTING</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {[
-              {label:"Pre-summer timed", value:stats.preTimes,  color:"#1565c0"},
-              {label:"Post-summer timed",value:stats.postTimes, color:"#2e7d32"},
-            ].map(s=>(
-              <div key={s.label} style={{background:"var(--g3)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
-                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:s.color}}>{s.value}</div>
-                <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{s.label}</div>
-                <div style={{fontSize:10,color:"var(--muted)",marginTop:2}}>of {stats.total} players</div>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         {stats.total - stats.registered > 0 && (
           <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede"}}>
