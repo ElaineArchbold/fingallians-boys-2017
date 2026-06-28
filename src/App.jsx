@@ -11,21 +11,16 @@ const ADMIN_EMAILS = [
 const SUPER_ADMIN_EMAIL = "e.t.archbold@gmail.com";
 const FORMSPREE_URL     = "https://formspree.io/f/mrewqpqo";
 const WHATSAPP_LINK     = "https://chat.whatsapp.com/FJLfHJpjKbi6KFGzHbpEoQ";
+const APP_SQUAD         = "2017 Boys";
+const CONSENT_START_DATE = "2026-06-26T00:00:00.000Z";
 
-// Admin accounts that should be auto-linked to a player by name
-const ADMIN_PLAYER_NAMES = {
-  "e.t.archbold@gmail.com": "Elliot Gaffney",
-};
-// Elaine's child — auto-linked if not already linked
-const ADMIN_PLAYER_NAME = "Elliot Gaffney";
+// No admin account is pre-linked to a child in the 2017 Boys app.
+// Elliot Gaffney should exist in Supabase as the only player with squad = "2017 Boys".
+// His parent will link to him when they register/select him.
+const ADMIN_PLAYER_NAMES = {};
+const ADMIN_PLAYER_NAME = null;
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const ALLOWED_PLAYER_NAMES = ["Elliot Gaffney"];
-function restrictPlayers(list = []) {
-  return (list || []).filter(p => ALLOWED_PLAYER_NAMES.includes(p.name));
-}
-
 
 // ── Audit logging helper ──────────────────────────────────────────────────────
 async function logAudit(userEmail, player, action, detail, oldValue = null, newValue = null) {
@@ -36,6 +31,7 @@ async function logAudit(userEmail, player, action, detail, oldValue = null, newV
       player_name: player?.name || null,
       action,
       detail,
+      squad: APP_SQUAD,
       old_value:   oldValue  ? String(oldValue)  : null,
       new_value:   newValue  ? String(newValue)  : null,
     });
@@ -51,84 +47,84 @@ const CHALLENGE_LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCA
 
 const WEEKS = [
   {
-    week:1, phase:"Foundation", dates:"Jun 29–Jul 5",
-    runs:[{label:"Run 1",distance:"500m"},{label:"Run 2",distance:"750m"}],
-    speed:[{id:"s1a",label:"⚡ Fall Forward",desc:"Practise for 5–10 minutes at least once this week. Keep it fun: lean forward, take quick steps, and accelerate smoothly.",youtube_id:"PTmWJ4kk0yE"}],
+    week:1, phase:"Foundation", dates:"Jun 29-Jul 5",
+    runs:[{label:"Run 1",distance:"1k"},{label:"Run 2",distance:"1k"},{label:"Run 3",distance:"1.5k"}],
+    speed:[{id:"s1a",label:"⚡ Fall Forward",desc:"Practise for 5-8 minutes at least once this week. Learn the name: Fall Forward. Keep it fun: tall body, gentle lean, quick feet.",youtube_id:"PTmWJ4kk0yE"}],
     skills:[
-      {id:"h1a",label:"🏑 Roll Lift",desc:"Practise for 10–15 minutes. Roll the sliotar and lift it cleanly with control. Count how many clean lifts you can do.",youtube_id:"Beu3_ecp53Q"},
-      {id:"f1a",label:"⚽ The Solo",desc:"Practise for 10–15 minutes. Bounce and toe-tap at walking pace first, then build up gently.",youtube_id:"MZwQ695hqgk"},
+      {id:"h1a",label:"🏑 Roll Lift",desc:"10-15 minutes at least once this week. Roll the sliotar slowly and scoop it up. Start walking pace, both sides if possible.",youtube_id:"Beu3_ecp53Q"},
+      {id:"f1a",label:"⚽ The Solo",desc:"10-15 minutes at least once this week. Practise bounce and toe-tap slowly. Focus on control, not speed.",youtube_id:"MZwQ695hqgk"},
     ],
-    squad:{label:"Squad Session – Fun Skills",desc:"Get a small group together. Warm up, practise Fall Forward, then do Roll Lift and Solo challenges. Keep it fun and safe.",youtube_id:"PTmWJ4kk0yE"},
+    squad:{label:"Squad Session - Fun Skills Starter",desc:"Get 2-4 lads together. Keep it light and fun: quick feet, roll-lift relay and easy solo practice. Send a screenshot or short clip for bonus points.",youtube_id:"PTmWJ4kk0yE"},
   },
   {
-    week:2, phase:"Foundation", dates:"Jul 6–12",
-    runs:[{label:"Run 1",distance:"500m"},{label:"Run 2",distance:"750m"}],
-    speed:[{id:"s2a",label:"⚡ Stationary Arm Swing",desc:"Practise for 5–10 minutes. Elbows bent, hands move cheek-to-pocket, stay relaxed.",youtube_id:"NUmUwXqG1pE"}],
+    week:2, phase:"Foundation", dates:"Jul 6-12",
+    runs:[{label:"Run 1",distance:"1k"},{label:"Run 2",distance:"1.5k"},{label:"Run 3",distance:"1.5k"}],
+    speed:[{id:"s2a",label:"⚡ Stationary Arm Swing",desc:"Practise for 5-8 minutes. Strong arms, relaxed shoulders. This is a simple speed habit for young players.",youtube_id:"NUmUwXqG1pE"}],
     skills:[
-      {id:"h2a",label:"🏑 Jab Lift",desc:"Practise for 10–15 minutes. Jab under the sliotar and flick it up gently. Aim for clean lifts.",youtube_id:"ob1hmrWKI58"},
-      {id:"f2a",label:"⚽ Hook Kick",desc:"Practise for 10–15 minutes. Start close to a wall or partner and focus on clean contact.",youtube_id:"Vjp2oeXWB3c"},
+      {id:"h2a",label:"🏑 Jab Lift",desc:"10-15 minutes at least once this week. Keep the ball still first, then try a slow roll. Count clean lifts.",youtube_id:"ob1hmrWKI58"},
+      {id:"f2a",label:"⚽ Hook Kick",desc:"10-15 minutes at least once this week. Start close to a wall or partner. Use easy kicks and aim for accuracy.",youtube_id:"Vjp2oeXWB3c"},
     ],
-    squad:{label:"Squad Session – Arm Swing & Lift",desc:"Practise arm swings together, then do Jab Lift and Hook Kick games. Count clean attempts, not power.",youtube_id:"NUmUwXqG1pE"},
+    squad:{label:"Squad Session - Arms, Lifts & Kicks",desc:"Short team session: arm swings, jab-lift challenge and easy hook-kick pairs. Keep it safe, positive and fun.",youtube_id:"NUmUwXqG1pE"},
   },
   {
-    week:3, phase:"Building", dates:"Jul 13–19",
-    runs:[{label:"Run 1",distance:"600m"},{label:"Run 2",distance:"800m"}],
-    speed:[{id:"s3a",label:"⚡ A Skip",desc:"Practise for 5–10 minutes. Keep rhythm, high knees, and soft landings.",youtube_id:"2I4rDiFs6Ec"}],
+    week:3, phase:"Building", dates:"Jul 13-19",
+    runs:[{label:"Run 1",distance:"1.5k"},{label:"Run 2",distance:"1.5k"},{label:"Run 3",distance:"2k"}],
+    speed:[{id:"s3a",label:"⚡ A March",desc:"Practise for 5-8 minutes. March tall, knees up, strong arms. This is easier than sprinting and great for technique.",youtube_id:"HISmA4pZWp0"}],
     skills:[
-      {id:"h3a",label:"🏑 Wall Strike and Control",desc:"Practise for 10–15 minutes. Strike softly off the wall and control the return.",youtube_id:"XVFP1xHeNo4"},
-      {id:"f3a",label:"⚽ Hop Solo Dummy",desc:"Practise for 10–15 minutes. Keep it slow first: hop solo, dummy step, move away.",youtube_id:"0ezRQmcRWvM"},
+      {id:"h3a",label:"🏑 Wall Strike and Control",desc:"10-15 minutes at least once this week. Stand close to the wall, strike gently and control the return.",youtube_id:"XVFP1xHeNo4"},
+      {id:"f3a",label:"⚽ Toe Tap Left & Right",desc:"10-15 minutes at least once this week. Try toe taps on both feet. Go slowly and stay balanced.",youtube_id:"y21NxFXv8LQ"},
     ],
-    squad:{label:"Squad Session – Rhythm & Control",desc:"A Skip warm-up, then wall strike and hop solo games. Focus on rhythm and control.",youtube_id:"2I4rDiFs6Ec"},
+    squad:{label:"Squad Session - March, Wall & Toe Tap",desc:"Short fun session: A March together, gentle wall striking and toe-tap relay. Bonus points for sending squad session proof.",youtube_id:"HISmA4pZWp0"},
   },
   {
-    week:4, phase:"Building", dates:"Jul 20–26",
-    runs:[{label:"Run 1",distance:"600m"},{label:"Run 2",distance:"800m"}],
-    speed:[{id:"s4a",label:"⚡ Ankling Drill",desc:"Practise for 5–10 minutes. Fast little contacts, stay tall, keep it light.",youtube_id:"11xHsMcomf4"}],
+    week:4, phase:"Building", dates:"Jul 20-26",
+    runs:[{label:"Run 1",distance:"1.5k"},{label:"Run 2",distance:"2k"},{label:"Run 3",distance:"2k"}],
+    speed:[{id:"s4a",label:"⚡ Ankling Drill",desc:"Practise for 5-8 minutes. Small quick steps, stay light on your feet. Keep the distance short.",youtube_id:"11xHsMcomf4"}],
     skills:[
-      {id:"h4a",label:"🏑 Overhead Catch",desc:"Practise for 10–15 minutes. Toss and catch above the head with eyes on the ball.",youtube_id:"WMM6C3eFuIE"},
-      {id:"f4a",label:"⚽ Punt Kick",desc:"Practise for 10–15 minutes. Kick to a target or partner. Focus on balance and technique.",youtube_id:"qsq61w-XWDg"},
+      {id:"h4a",label:"🏑 Roll Lift Refresh",desc:"10-15 minutes at least once this week. Go back to the roll lift and see if you can do more clean lifts than Week 1.",youtube_id:"Beu3_ecp53Q"},
+      {id:"f4a",label:"⚽ Wall Hand Pass",desc:"10-15 minutes at least once this week. Hand-pass softly to a wall or partner and catch the return.",youtube_id:"vd3Z9t2G64Y"},
     ],
-    squad:{label:"Squad Session – Fast Feet & Catch",desc:"Ankling warm-up, overhead catch games, then punt kick target practice.",youtube_id:"11xHsMcomf4"},
+    squad:{label:"Squad Session - Quick Feet & Control",desc:"Fun group session: quick feet with cones, roll-lift relay and wall hand-pass pairs. Keep it short and upbeat.",youtube_id:"11xHsMcomf4"},
   },
   {
-    week:5, phase:"Push", dates:"Jul 27–Aug 2",
-    runs:[{label:"Run 1",distance:"700m"},{label:"Run 2",distance:"900m"}],
-    speed:[{id:"s5a",label:"⚡ A March",desc:"Practise for 5–10 minutes. March tall, knee up, toe up, strong posture.",youtube_id:"HISmA4pZWp0"}],
+    week:5, phase:"Push", dates:"Jul 27-Aug 2",
+    runs:[{label:"Run 1",distance:"2k"},{label:"Run 2",distance:"2k"},{label:"Run 3",distance:"2k"}],
+    speed:[{id:"s5a",label:"⚡ Butt Kicks",desc:"Practise for 5-8 minutes. Heel up, light steps, relaxed arms. Do short bursts only.",youtube_id:"p7OBdAJu9E8"}],
     skills:[
-      {id:"h5a",label:"🏑 Strike from the Hand",desc:"Practise for 10–15 minutes. Start gently and focus on clean technique, not power.",youtube_id:"A4qGKdeviHU"},
-      {id:"f5a",label:"⚽ Wall Hand Pass",desc:"Practise for 10–15 minutes. Hand pass to the wall or partner and catch the return.",youtube_id:"vd3Z9t2G64Y"},
+      {id:"h5a",label:"🏑 Strike from the Hand",desc:"10-15 minutes at least once this week. Start gently, both sides if possible. Focus on clean contact.",youtube_id:"A4qGKdeviHU"},
+      {id:"f5a",label:"⚽ Hook Kick Refresh",desc:"10-15 minutes at least once this week. Easy hook kicks to a wall or partner. Count accurate kicks.",youtube_id:"Vjp2oeXWB3c"},
     ],
-    squad:{label:"Squad Session – March & Pass",desc:"A March warm-up, strike from the hand, and wall hand-pass games.",youtube_id:"HISmA4pZWp0"},
+    squad:{label:"Squad Session - Kicks & Strikes",desc:"Team session: butt kicks, gentle striking from the hand and hook-kick accuracy. Send in proof for squad bonus points.",youtube_id:"p7OBdAJu9E8"},
   },
   {
-    week:6, phase:"Push", dates:"Aug 3–9",
-    runs:[{label:"Run 1",distance:"700m"},{label:"Run 2",distance:"1k"}],
-    speed:[{id:"s6a",label:"⚡ Butt Kicks",desc:"Practise for 5–10 minutes. Keep the body tall and bring heels up gently.",youtube_id:"p7OBdAJu9E8"}],
+    week:6, phase:"Push", dates:"Aug 3-9",
+    runs:[{label:"Run 1",distance:"2k"},{label:"Run 2",distance:"2k"},{label:"Run 3",distance:"2.5k"}],
+    speed:[{id:"s6a",label:"⚡ A Skip",desc:"Practise for 5-8 minutes. Keep it bouncy and controlled. Short distance only, quality over speed.",youtube_id:"2I4rDiFs6Ec"}],
     skills:[
-      {id:"h6a",label:"🏑 Accurate Scoring Points",desc:"Practise for 10–15 minutes. Use a safe target and focus on accuracy over power.",youtube_id:"sZ5Pz5-2u9w"},
-      {id:"f6a",label:"⚽ Toe Tap Left & Right",desc:"Practise for 10–15 minutes. Alternate left and right toe taps slowly, then build rhythm.",youtube_id:"y21NxFXv8LQ"},
+      {id:"h6a",label:"🏑 Jab Lift Challenge",desc:"10-15 minutes at least once this week. Try to beat your best clean jab-lift score from Week 2.",youtube_id:"ob1hmrWKI58"},
+      {id:"f6a",label:"⚽ The Solo Refresh",desc:"10-15 minutes at least once this week. Slow soloing first, then try a little faster if control is good.",youtube_id:"MZwQ695hqgk"},
     ],
-    squad:{label:"Squad Session – Rhythm & Accuracy",desc:"Butt kicks warm-up, toe-tap rhythm challenge, and safe scoring targets.",youtube_id:"p7OBdAJu9E8"},
+    squad:{label:"Squad Session - Skip, Lift & Solo",desc:"Fun squad practice: A Skip, jab-lift challenge and solo relay. Keep it encouraging and let every player get turns.",youtube_id:"2I4rDiFs6Ec"},
   },
   {
-    week:7, phase:"Peak", dates:"Aug 10–16",
-    runs:[{label:"Run 1",distance:"800m"},{label:"Run 2",distance:"1k"}],
-    speed:[{id:"s7a",label:"⚡ Wall Knee Drive",desc:"Practise for 5–10 minutes. Drive the knee up, keep posture strong, and stay controlled.",youtube_id:"ZW9rjy9TgGM"}],
+    week:7, phase:"Peak", dates:"Aug 10-16",
+    runs:[{label:"Run 1",distance:"2k"},{label:"Run 2",distance:"2.5k"},{label:"Run 3",distance:"2.5k"}],
+    speed:[{id:"s7a",label:"⚡ Wall Knee Drive",desc:"Practise for 5-8 minutes. Gentle wall position, knee drive up, stay balanced. Keep sets short.",youtube_id:"ZW9rjy9TgGM"}],
     skills:[
-      {id:"h7a",label:"🏑 Ground Strike",desc:"Practise for 10–15 minutes. Work on grip, stance, and a clean ground strike. Keep it controlled.",youtube_id:"fnmWPSXEry8"},
-      {id:"f7a",label:"⚽ Body Catch",desc:"Practise for 10–15 minutes. Catch with two hands into the chest, eyes on the ball, soft hands.",youtube_id:"_m0gFQhRVTU"},
+      {id:"h7a",label:"🏑 Wall Strike and Control",desc:"10-15 minutes at least once this week. Close to the wall, easy strikes, clean catches and control.",youtube_id:"XVFP1xHeNo4"},
+      {id:"f7a",label:"⚽ Punt Kick",desc:"10-15 minutes at least once this week. Gentle punt kicks to a partner or target. Accuracy first.",youtube_id:"qsq61w-XWDg"},
     ],
-    squad:{label:"Squad Session – Knee Drive & Catch",desc:"Wall knee drive warm-up, body catch games, and ground strike practice.",youtube_id:"ZW9rjy9TgGM"},
+    squad:{label:"Squad Session - Team Challenge",desc:"Get the lads together: wall knee drive, wall strike and punt-kick target game. Send a squad session screenshot or video for bonus points.",youtube_id:"ZW9rjy9TgGM"},
   },
   {
-    week:8, phase:"Peak", dates:"Aug 17–23",
-    runs:[{label:"Run 1",distance:"800m"},{label:"Run 2",distance:"1k"}],
-    speed:[{id:"s8a",label:"⚡ 3 Point Start",desc:"Practise for 5–10 minutes. Start low, push away smoothly, and keep it controlled.",youtube_id:"rJ7SbSqqKS0"}],
+    week:8, phase:"Peak", dates:"Aug 17-23",
+    runs:[{label:"Run 1",distance:"2.5k"},{label:"Run 2",distance:"2.5k"},{label:"Run 3",distance:"3k"}],
+    speed:[{id:"s8a",label:"⚡ Fall Forward Finale",desc:"Final week: practise Fall Forward again for 5-8 minutes. Show how much cleaner and quicker your start looks now.",youtube_id:"PTmWJ4kk0yE"}],
     skills:[
-      {id:"h8a",label:"🏑 Ball Wall Hurling Skills",desc:"Practise for 10–15 minutes. Use the ball wall for simple, controlled hurling touches.",youtube_id:"ZVULhBdvtuA"},
-      {id:"f8a",label:"⚽ Hand Pass Drill",desc:"Practise for 10–15 minutes. Work on clean hand pass technique and accuracy to a partner or wall.",youtube_id:"OED0bRXy4LE"},
+      {id:"h8a",label:"🏑 Strike from the Hand",desc:"10-15 minutes at least once this week. Final-week striking practice: clean contact, safe space, both sides if possible.",youtube_id:"A4qGKdeviHU"},
+      {id:"f8a",label:"⚽ Fun Free Taking",desc:"10-15 minutes at least once this week. Pick easy targets and count how many accurate kicks you can get.",youtube_id:"kqng-SW8j4Y"},
     ],
-    squad:{label:"Squad Session – Final Fun Challenge",desc:"Final week: 3 Point Start, ball wall hurling skills, and hand pass accuracy. Finish strong and have fun.",youtube_id:"rJ7SbSqqKS0"},
+    squad:{label:"Squad Session - Final Team Finish",desc:"Last week! Get the team together, finish strong and celebrate completing the challenge. Short skills circuit, fun target game and squad photo/screenshot for bonus points.",youtube_id:"PTmWJ4kk0yE"},
   },
 ];
 
@@ -404,7 +400,7 @@ function TCReacceptModal({ userEmail, onAccepted }) {
         player_name: null,
         action: "tc_agreed_at_signup",
         detail: "User agreed to updated Terms & Conditions (v2 — includes WhatsApp, photography, coaching group disclaimer)",
-        squad: null,
+        squad: APP_SQUAD,
         old_value: null,
         new_value: new Date().toISOString(),
       });
@@ -517,10 +513,11 @@ export default function App() {
       if (link?.player_id) {
         const { data: playerData } = await sb
           .from("players")
-          .select("id, name")
+          .select("id, name, squad")
           .eq("id", link.player_id)
+          .eq("squad", APP_SQUAD)
           .maybeSingle();
-        if (playerData && ALLOWED_PLAYER_NAMES.includes(playerData.name)) {
+        if (playerData) {
           setPlayer(playerData);
           const { data: comps } = await sb
             .from("task_completions")
@@ -538,8 +535,12 @@ export default function App() {
   }
 
   async function loadAllPlayers() {
-    const { data } = await sb.from("players").select("id,name").order("name");
-    setAllPlayers(restrictPlayers(data || []));
+    const { data } = await sb
+      .from("players")
+      .select("id,name,squad")
+      .eq("squad", APP_SQUAD)
+      .order("name");
+    setAllPlayers(data || []);
   }
 
   async function toggleTask(taskKey, pts, label) {
@@ -692,7 +693,7 @@ function AuthScreen({ showToast }) {
   }
 
 
-  const redirectUrl = "https://fingallians-boys-2017.vercel.app/";
+  const redirectUrl = "https://fingallians-boys-2017.vercel.app";
 
   async function submit() {
     setErr(""); setBusy(true);
@@ -701,7 +702,7 @@ function AuthScreen({ showToast }) {
       if (pw.length < 6) { setErr("Password must be at least 6 characters long"); setBusy(false); return; }
       if (!tcAgreed) { setErr("Please agree to the Terms & Conditions to continue"); setBusy(false); return; }
       const { error } = await sb.auth.signUp({ email, password: pw,
-        options: { emailRedirectTo: "https://fingallians-boys-2017.vercel.app/" }
+        options: { emailRedirectTo: "https://fingallians-boys-2017.vercel.app" }
       });
       if (error) { setErr(error.message); setBusy(false); return; }
       setSignedUpEmail(email);
@@ -713,7 +714,7 @@ function AuthScreen({ showToast }) {
           player_name: null,
           action: "tc_agreed_at_signup",
           detail: "User agreed to Terms & Conditions at account creation",
-          squad: null,
+          squad: APP_SQUAD,
           old_value: null,
           new_value: new Date().toISOString(),
         });
@@ -808,7 +809,7 @@ function AuthScreen({ showToast }) {
                 </div>
                 <div className="tc-section">
                   <strong>Data & Privacy</strong>
-                  <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2014boys@gmail.com</strong>.</p>
+                  <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2017boys@gmail.com</strong>.</p>
                 </div>
                 <div className="tc-section">
                   <strong>Participation</strong>
@@ -869,8 +870,12 @@ function LinkPlayerScreen({ onLink }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    sb.from("players").select("id,name").order("name").then(({ data }) => {
-      setPlayers(restrictPlayers(data || []));
+    sb.from("players")
+      .select("id,name,squad")
+      .eq("squad", APP_SQUAD)
+      .order("name")
+      .then(({ data }) => {
+      setPlayers(data || []);
       setLoading(false);
     });
   }, []);
@@ -1034,7 +1039,7 @@ function EmailCoachesButton({ label = "📧 Message the Coaches", player }) {
 }
 
 
-function WAConsentButton({ waConsent, setWaConsent }) {
+function WAConsentButton({ waConsent, setWaConsent, player }) {
   const [showModal, setShowModal] = useState(false);
   const [ticked, setTicked]       = useState(false);
 
@@ -1054,11 +1059,11 @@ function WAConsentButton({ waConsent, setWaConsent }) {
     try {
       sb.from("audit_log").insert({
         user_email: null,
-        player_id: null,
-        player_name: null,
+        player_id: player?.id || null,
+        player_name: player?.name || null,
         action: "wa_consent_given",
         detail: "User agreed to WhatsApp group T&Cs and joined the group",
-        squad: null,
+        squad: APP_SQUAD,
         old_value: null,
         new_value: new Date().toISOString(),
       });
@@ -1202,7 +1207,7 @@ function HomeTab({ player, checks, pts, weeksDone, onNav, onToggle, showToast, w
         <div style={{fontSize:13,opacity:0.85,lineHeight:1.6,marginBottom:14}}>
           Filmed yourself practising? Send your videos and photos to the coaches on WhatsApp — we would love to see the lads putting in the work! And don't forget — send in proof of your squad session to claim your bonus points! 📸
         </div>
-        <WAConsentButton waConsent={waConsent} setWaConsent={setWaConsent} />
+        <WAConsentButton waConsent={waConsent} setWaConsent={setWaConsent} player={player} />
       </div>
 
       <div style={{textAlign:"center",marginTop:14,paddingBottom:8}}>
@@ -1493,7 +1498,7 @@ function PlanTab({ checks, onToggle, player, showToast }) {
         </div>
         <div className="tc-section">
           <strong>Data & Privacy</strong>
-          <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2014boys@gmail.com</strong>.</p>
+          <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2017boys@gmail.com</strong>.</p>
         </div>
         <div className="tc-section">
           <strong>Participation</strong>
@@ -1657,7 +1662,7 @@ function ProgressTab({ player, checks, isAdmin }) {
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,color:"var(--gold)",letterSpacing:"0.02em"}}>
           {player.name.split(" ")[0]}'s Progress
         </div>
-        <div style={{fontSize:11,opacity:0.65,marginTop:2}}>Fingallians 2017 · Summer Challenge 2026</div>
+        <div style={{fontSize:11,opacity:0.65,marginTop:2}}>Fingallians 2017 Boys · Summer Challenge 2026</div>
         {isAdmin && (
           <div style={{fontSize:10,marginTop:4,background:"rgba(255,255,255,.12)",display:"inline-block",padding:"2px 8px",borderRadius:10,color:"rgba(255,255,255,.75)"}}>
             👁 Viewing as admin
@@ -1787,7 +1792,10 @@ function ScoresTab() {
 
   useEffect(() => {
     async function load() {
-      const { data: players } = await sb.from("players").select("id,name");
+      const { data: players } = await sb
+        .from("players")
+        .select("id,name,squad")
+        .eq("squad", APP_SQUAD);
       const { data: comps }   = await sb.from("task_completions").select("player_id,task_key");
       if (!players) return;
       const statsMap = {};
@@ -1795,8 +1803,7 @@ function ScoresTab() {
         if (!statsMap[r.player_id]) statsMap[r.player_id] = {};
         statsMap[r.player_id][r.task_key] = true;
       });
-      const visiblePlayers = restrictPlayers(players || []);
-      const rows = visiblePlayers.map(p => ({
+      const rows = players.map(p => ({
         id: p.id, name: p.name, pts: totalPts(statsMap[p.id] || {}),
       })).sort((a,b) => b.pts - a.pts);
       setLeaderboard(rows);
@@ -2343,46 +2350,83 @@ function ConsentLog() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const tcActions = ["tc_agreed_at_signup", "tc_reaccepted"];
+  const waActions = ["wa_consent_given", "whatsapp_consent", "whatsapp_consent_given", "wa_joined"];
+
   useEffect(() => {
-    sb.from("audit_log")
-      .select("user_email,player_name,action,detail,created_at,squad")
-      .in("action", ["tc_agreed_at_signup","wa_consent_given"])
-      .order("created_at", { ascending: false })
-      .then(({ data }) => { setRecords(data || []); setLoading(false); });
+    async function loadConsentLog() {
+      setLoading(true);
+
+      const { data, error } = await sb
+        .from("audit_log")
+        .select("user_email,player_name,action,detail,created_at,new_value,squad")
+        .in("action", [...tcActions, ...waActions])
+        .gte("created_at", CONSENT_START_DATE)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Consent log load failed", error);
+        setRecords([]);
+      } else {
+        const filtered = (data || []).filter(r => !r.squad || r.squad === APP_SQUAD);
+        setRecords(filtered);
+      }
+
+      setLoading(false);
+    }
+
+    loadConsentLog();
   }, []);
 
-  const tcCount = records.filter(r => r.action === "tc_agreed_at_signup").length;
-  const waCount = records.filter(r => r.action === "wa_consent_given").length;
+  const tcCount = records.filter(r => tcActions.includes(r.action)).length;
+  const waCount = records.filter(r => waActions.includes(r.action)).length;
 
   return (
     <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede"}}>
-      <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:14}}>
+      <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:6}}>
         CONSENT LOG
       </div>
+      <div style={{fontSize:11,color:"var(--muted)",lineHeight:1.5,marginBottom:14}}>
+        Showing all app T&amp;Cs and WhatsApp consents recorded since 26/06/2026 for {APP_SQUAD}. Older records without a squad are included where available.
+      </div>
+
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
         <div style={{background:"#e3f2fd",borderRadius:12,padding:"12px 14px",textAlign:"center"}}>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:32,color:"#1565c0"}}>{tcCount}</div>
-          <div style={{fontSize:11,color:"#1565c0",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",marginTop:2}}>📋 T&Cs Agreed</div>
+          <div style={{fontSize:11,color:"#1565c0",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",marginTop:2}}>📋 App T&amp;Cs</div>
         </div>
         <div style={{background:"#e8f5e9",borderRadius:12,padding:"12px 14px",textAlign:"center"}}>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:32,color:"#25a244"}}>{waCount}</div>
           <div style={{fontSize:11,color:"#25a244",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",marginTop:2}}>💬 WhatsApp Consent</div>
         </div>
       </div>
+
       {loading && <div style={{textAlign:"center",color:"var(--muted)",padding:"16px 0",fontSize:13}}>Loading…</div>}
+
       {!loading && records.length === 0 && (
-        <div style={{textAlign:"center",color:"var(--muted)",padding:"16px 0",fontSize:13}}>No consent records yet</div>
+        <div style={{textAlign:"center",color:"var(--muted)",padding:"16px 0",fontSize:13}}>
+          No consent records found since 26/06/2026
+        </div>
       )}
+
       {!loading && records.map((r, i) => {
-        const isTc = r.action === "tc_agreed_at_signup";
-        const color = isTc ? "#1565c0" : "#25a244";
-        const bg    = isTc ? "#e3f2fd" : "#e8f5e9";
-        const icon  = isTc ? "📋" : "💬";
-        const label = isTc ? "T&Cs at signup" : "WhatsApp consent";
-        const fullDate = r.created_at ? new Date(r.created_at).toLocaleString("en-IE", {
+        const isWhatsApp = waActions.includes(r.action);
+        const isReaccept = r.action === "tc_reaccepted";
+        const color = isWhatsApp ? "#25a244" : "#1565c0";
+        const bg    = isWhatsApp ? "#e8f5e9" : "#e3f2fd";
+        const icon  = isWhatsApp ? "💬" : "📋";
+        const label = isWhatsApp ? "WhatsApp consent" : isReaccept ? "T&Cs re-agreed" : "T&Cs at signup";
+
+        const createdAt = r.created_at ? new Date(r.created_at).toLocaleString("en-IE", {
           day:"numeric", month:"short", year:"numeric",
           hour:"2-digit", minute:"2-digit"
         }) : "";
+
+        const acceptedAt = r.new_value ? new Date(r.new_value).toLocaleString("en-IE", {
+          day:"numeric", month:"short", year:"numeric",
+          hour:"2-digit", minute:"2-digit"
+        }) : createdAt;
+
         return (
           <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",
                                borderBottom:i<records.length-1?"1px solid #f8f0f0":"none"}}>
@@ -2391,19 +2435,31 @@ function ConsentLog() {
             <div style={{flex:1}}>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                 <div style={{fontSize:13,fontWeight:700,color:"var(--dark)"}}>
-                  {r.user_email || "Unknown"}
+                  {r.player_name || r.user_email || "Unknown"}
                 </div>
                 <div style={{fontSize:11,fontWeight:700,color:color,background:bg,
                              padding:"1px 8px",borderRadius:10}}>{label}</div>
               </div>
-              <div style={{fontSize:10,color:"var(--muted)",marginTop:3}}>🕐 {fullDate}</div>
+
+              <div style={{fontSize:11,color:"#555",marginTop:3}}>
+                {r.user_email || "No email recorded"}{r.squad ? ` · Squad: ${r.squad}` : " · Squad not logged"}
+              </div>
+
+              <div style={{fontSize:10,color:"var(--muted)",marginTop:3}}>🕐 Accepted: {acceptedAt}</div>
+
+              {r.detail && (
+                <div style={{fontSize:10,color:"var(--muted)",marginTop:3,lineHeight:1.4}}>
+                  {r.detail}
+                </div>
+              )}
             </div>
           </div>
         );
       })}
+
       <div style={{marginTop:14,padding:"10px 12px",background:"#f9f9f9",borderRadius:10,
                    fontSize:11,color:"var(--muted)",lineHeight:1.6}}>
-        💡 These records are also stored permanently in your Supabase audit_log table and can be exported at any time.
+        💡 New consent records are stored with squad set to {APP_SQUAD}. Older audit rows that did not save squad are still shown where available.
       </div>
     </div>
   );
@@ -2424,7 +2480,7 @@ function DashboardTab({ allPlayers }) {
     Promise.all([
       sb.from("task_completions").select("player_id,task_key,completed_at").in("player_id", ids),
       sb.from("parent_players").select("player_id"),
-      sb.from("audit_log").select("user_email,player_name,action,detail,created_at").order("created_at",{ascending:false}).limit(20),
+      sb.from("audit_log").select("user_email,player_name,action,detail,created_at,squad").order("created_at",{ascending:false}).limit(100),
       sb.from("fitness_tests").select("player_id,period,lap_time").in("player_id", ids),
     ]).then(([{data:comps},{data:links},{data:logs},{data:fitness}]) => {
       const byPlayer = {};
@@ -2439,7 +2495,7 @@ function DashboardTab({ allPlayers }) {
       setWeeklyMap(wm);
 
       setClaimedIds(new Set(links?.map(l => l.player_id) || []));
-      setRecentLog(logs || []);
+      setRecentLog((logs || []).filter(r => !r.squad || r.squad === APP_SQUAD).slice(0, 20));
 
       const totalSessions = comps?.length || 0;
       const playersActive = new Set(comps?.map(r => r.player_id)).size;
@@ -2639,7 +2695,7 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
   async function addPlayer() {
     if (!newName.trim()) return;
     setAdding(true);
-    const { error } = await sb.from("players").insert({ name: newName.trim(), squad: "2017 Boys" });
+    const { error } = await sb.from("players").insert({ name: newName.trim(), squad: APP_SQUAD });
     if (error) { showToast("❌ Error adding player"); }
     else { showToast(`✅ ${newName.trim()} added!`); setNewName(""); onRefresh(); }
     setAdding(false);
@@ -2647,7 +2703,7 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
 
   async function removePlayer(id, name) {
     if (!window.confirm(`Remove ${name} from the squad list?`)) return;
-    await sb.from("players").delete().eq("id", id);
+    await sb.from("players").delete().eq("id", id).eq("squad", APP_SQUAD);
     showToast(`🗑️ ${name} removed`);
     onRefresh();
   }
