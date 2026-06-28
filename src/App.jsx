@@ -1483,6 +1483,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
 function VideoEmbed({ ytId, playing, onPlay, dark }) {
   const isPlaceholder = !ytId || ytId.startsWith("Demo");
   const thumbUrl = ytId && !isPlaceholder
+    ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
     : null;
 
   return (
