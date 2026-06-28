@@ -1438,6 +1438,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                   ].slice(0,3).map((v, idx) => {
                     const vidKey = `squad-${idx}`;
                     const thumbUrl = v.ytId && !v.ytId.startsWith("Demo")
+                      ? `https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`
                       : null;
                     return (
                       <div key={idx} style={{flex:1,display:"flex",flexDirection:"column",gap:4}}>
@@ -1445,6 +1446,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                           onClick={() => setPlayingVideo(playingVideo === vidKey ? null : vidKey)}>
                           {playingVideo === vidKey ? (
                             <iframe
+                              src={`https://www.youtube.com/embed/${v.ytId}?autoplay=1&rel=0`}
                               style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
                               allow="autoplay; encrypted-media" allowFullScreen />
                           ) : thumbUrl ? (
