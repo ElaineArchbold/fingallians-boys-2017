@@ -392,7 +392,7 @@ function TCReacceptModal({ userEmail, onAccepted }) {
   async function handleAccept() {
     if (!ticked) return;
     setSaving(true);
-    try { localStorage.setItem("tcVersion", "v2"); } catch(e) {}
+    try { localStorage.setItem(`tcVersion:${APP_SQUAD}`, "v2"); } catch(e) {}
     try {
       await sb.from("audit_log").insert({
         user_email: userEmail,
@@ -479,8 +479,8 @@ export default function App() {
   const [allPlayers, setAllPlayers] = useState([]);
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
-  const [waConsent, setWaConsent] = useState(() => { try { return localStorage.getItem("waConsent") === "true"; } catch { return false; } });
-  const [tcAccepted, setTcAccepted] = useState(() => { try { return localStorage.getItem("tcVersion") === "v2"; } catch { return false; } });
+  const [waConsent, setWaConsent] = useState(() => { try { return localStorage.getItem(`waConsent:${APP_SQUAD}`) === "true"; } catch { return false; } });
+  const [tcAccepted, setTcAccepted] = useState(() => { try { return localStorage.getItem(`tcVersion:${APP_SQUAD}`) === "v2"; } catch { return false; } });
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -1051,13 +1051,13 @@ function WAConsentButton({ waConsent, setWaConsent, player }) {
     }
   }
 
-  function handleConfirm() {
-    try { localStorage.setItem("waConsent", "true"); } catch(e) {}
+  async function handleConfirm() {
+    try { localStorage.setItem(`waConsent:${APP_SQUAD}`, "true"); } catch(e) {}
     setWaConsent(true);
     setShowModal(false);
-    // Log WhatsApp consent
+    // Log WhatsApp consent before opening WhatsApp, so the audit row is not lost
     try {
-      sb.from("audit_log").insert({
+      const { error } = await sb.from("audit_log").insert({
         user_email: null,
         player_id: player?.id || null,
         player_name: player?.name || null,
@@ -1067,7 +1067,10 @@ function WAConsentButton({ waConsent, setWaConsent, player }) {
         old_value: null,
         new_value: new Date().toISOString(),
       });
-    } catch(_) {}
+      if (error) console.error("WhatsApp consent audit failed", error);
+    } catch(e) {
+      console.error("WhatsApp consent audit failed", e);
+    }
     window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
   }
 
@@ -2362,6 +2365,7 @@ function ConsentLog() {
         .select("user_email,player_name,action,detail,created_at,new_value,squad")
         .in("action", [...tcActions, ...waActions])
         .gte("created_at", CONSENT_START_DATE)
+        .or(`squad.eq.${APP_SQUAD},squad.is.null`)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -2479,8 +2483,8 @@ function DashboardTab({ allPlayers }) {
     const ids = allPlayers.map(p => p.id);
     Promise.all([
       sb.from("task_completions").select("player_id,task_key,completed_at").in("player_id", ids),
-      sb.from("parent_players").select("player_id"),
-      sb.from("audit_log").select("user_email,player_name,action,detail,created_at,squad").order("created_at",{ascending:false}).limit(100),
+      sb.from("parent_players").select("player_id").in("player_id", ids),
+      sb.from("audit_log").select("user_email,player_name,action,detail,created_at,squad").or(`squad.eq.${APP_SQUAD},squad.is.null`).order("created_at",{ascending:false}).limit(100),
       sb.from("fitness_tests").select("player_id,period,lap_time").in("player_id", ids),
     ]).then(([{data:comps},{data:links},{data:logs},{data:fitness}]) => {
       const byPlayer = {};
@@ -2494,7 +2498,8 @@ function DashboardTab({ allPlayers }) {
       ids.forEach(id => { wm[id] = {}; WEEKS.forEach(w => { wm[id][w.week] = weekPts(w, byPlayer[id]); }); });
       setWeeklyMap(wm);
 
-      setClaimedIds(new Set(links?.map(l => l.player_id) || []));
+      const registeredIds = new Set((links || []).map(l => l.player_id).filter(id => ids.includes(id)));
+      setClaimedIds(registeredIds);
       setRecentLog((logs || []).filter(r => !r.squad || r.squad === APP_SQUAD).slice(0, 20));
 
       const totalSessions = comps?.length || 0;
@@ -2506,7 +2511,7 @@ function DashboardTab({ allPlayers }) {
       const postTimes = fitness?.filter(f=>f.period==="post" && f.lap_time).length || 0;
 
       setStats({ totalSessions, playersActive, avgPts, thisWeekSessions, preTimes, postTimes,
-                 registered: new Set(links?.map(l=>l.player_id)||[]).size, total: ids.length });
+                 registered: registeredIds.size, total: ids.length });
       setLoading(false);
     });
   }, [allPlayers]);
@@ -2686,8 +2691,9 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
         stats[r.player_id][r.task_key] = true;
       });
       setPlayerStats(stats);
-      const { data: links } = await sb.from("parent_players").select("player_id");
-      setClaimedIds(new Set(links?.map(l => l.player_id) || []));
+      const playerIds = allPlayers.map(p => p.id);
+      const { data: links } = await sb.from("parent_players").select("player_id").in("player_id", playerIds);
+      setClaimedIds(new Set((links || []).map(l => l.player_id).filter(id => playerIds.includes(id))));
     }
     load();
   }, [allPlayers]);
