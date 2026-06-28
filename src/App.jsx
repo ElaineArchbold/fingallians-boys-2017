@@ -114,6 +114,7 @@ const WEEKS = [
       {id:"h7a",label:"🏑 Wall Strike and Control",desc:"10-15 minutes at least once this week. Close to the wall, easy strikes, clean catches and control.",youtube_id:"XVFP1xHeNo4"},
       {id:"f7a",label:"⚽ Punt Kick",desc:"10-15 minutes at least once this week. Gentle punt kicks to a partner or target. Accuracy first.",youtube_id:"qsq61w-XWDg"},
     ],
+    squad:{label:"Squad Session - Knee Drive, Wall & Punt",desc:"Get 2-4 lads together for a short fun session: wall knee drive, easy wall striking and gentle punt-kick targets. Keep it safe and encouraging.",youtube_id:"ZW9rjy9TgGM"},
   },
   {
     week:8, phase:"Peak", dates:"Aug 17-23",
@@ -146,9 +147,9 @@ const PTS = { run:3, skill:2, speed:2, squad:4 };
 function totalPts(checks) {
   let p = 0;
   WEEKS.forEach(w => {
-    w.runs.forEach((_,i)  => { if(checks[runKey(w.week,i)])   p+=PTS.run; });
-    w.skills.forEach(s    => { if(checks[skillKey(w.week,s.id)]) p+=PTS.skill; });
-    w.speed.forEach(s     => { if(checks[speedKey(w.week,s.id)]) p+=PTS.speed; });
+    (w.runs || []).forEach((_,i)  => { if(checks[runKey(w.week,i)])   p+=PTS.run; });
+    (w.skills || []).forEach(s    => { if(checks[skillKey(w.week,s.id)]) p+=PTS.skill; });
+    (w.speed || []).forEach(s     => { if(checks[speedKey(w.week,s.id)]) p+=PTS.speed; });
     if(checks[squadKey(w.week)]) p+=PTS.squad;
   });
   return p;
@@ -156,15 +157,15 @@ function totalPts(checks) {
 
 function weekPts(w, checks) {
   let p = 0;
-  w.runs.forEach((_,i) => { if(checks[runKey(w.week,i)]) p+=PTS.run; });
-  w.skills.forEach(s   => { if(checks[skillKey(w.week,s.id)]) p+=PTS.skill; });
-  w.speed.forEach(s    => { if(checks[speedKey(w.week,s.id)]) p+=PTS.speed; });
+  (w.runs || []).forEach((_,i) => { if(checks[runKey(w.week,i)]) p+=PTS.run; });
+  (w.skills || []).forEach(s   => { if(checks[skillKey(w.week,s.id)]) p+=PTS.skill; });
+  (w.speed || []).forEach(s    => { if(checks[speedKey(w.week,s.id)]) p+=PTS.speed; });
   if(checks[squadKey(w.week)]) p+=PTS.squad;
   return p;
 }
 
 function weekMaxPts(w) {
-  return w.runs.length*PTS.run + w.skills.length*PTS.skill + w.speed.length*PTS.speed + PTS.squad;
+  return (w.runs || []).length*PTS.run + (w.skills || []).length*PTS.skill + (w.speed || []).length*PTS.speed + PTS.squad;
 }
 function computeStreak(checks) {
   let streak = 0;
@@ -1295,6 +1296,14 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
   const [expandedSquad, setExpandedSquad] = useState(false);
   const [playingVideo, setPlayingVideo]   = useState(null);
   const canToggle = !!player;
+  const runs = w.runs || [];
+  const speed = w.speed || [];
+  const skills = w.skills || [];
+  const squad = w.squad || {
+    label: "Squad Session",
+    desc: "Get a few lads together for a short, safe, fun skills session.",
+    youtube_id: null,
+  };
 
   return (
     <div>
@@ -1305,7 +1314,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
           <div className="sport-badge" style={{color:ps.accent}}>{SPORT_LABEL}</div>
           <div className="wk-dates" style={{color:ps.accent}}>{w.dates}</div>
           <div className="runs-chips">
-            {w.runs.map((r,i) => {
+            {runs.map((r,i) => {
               const k = runKey(w.week, i);
               const done = !!checks[k];
               return (
@@ -1326,7 +1335,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
       </div>
 
       {/* ── Speed Mechanics ── */}
-      {w.speed.map((s) => {
+      {speed.map((s) => {
         const k    = speedKey(w.week, s.id);
         const done = !!checks[k];
         const open = expandedSkill === s.id;
@@ -1366,7 +1375,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
       })}
 
       {/* ── Hurling & Football Skills ── */}
-      {w.skills.map((s) => {
+      {skills.map((s) => {
         const k    = skillKey(w.week, s.id);
         const done = !!checks[k];
         const open = expandedSkill === s.id;
@@ -1420,18 +1429,18 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
               <div className="squad-icon">👥</div>
               <div className="squad-hd-text">
                 <div className="squad-type">Squad Session · +{PTS.squad} pts</div>
-                <div className="squad-name">{w.squad.label}</div>
+                <div className="squad-name">{squad.label}</div>
               </div>
               <div className="squad-pts">+{PTS.squad}</div>
               <div style={{fontSize:18,color:"rgba(255,255,255,0.5)",transition:"transform 0.2s",transform:expandedSquad?"rotate(180deg)":"none"}}>⌄</div>
             </div>
             {expandedSquad && (
               <div className="squad-body">
-                <p className="squad-desc">{w.squad.desc}</p>
+                <p className="squad-desc">{squad.desc}</p>
                 <div className="squad-cta">👥 Get 3–4 lads together — this is your highest scoring task!</div>
 
                 {canToggle && (
-                  <button className={`squad-mark${done?" done":""}`} onClick={()=>onToggle(k,PTS.squad,w.squad.label)}>
+                  <button className={`squad-mark${done?" done":""}`} onClick={()=>onToggle(k,PTS.squad,squad.label)}>
                     {done?"✕ MARK INCOMPLETE":"✓ SQUAD SESSION DONE"}
                   </button>
                 )}
