@@ -478,7 +478,7 @@ export default function App() {
   const [allPlayers, setAllPlayers] = useState([]);
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
-  const [waConsent, setWaConsent] = useState(() => { try { return localStorage.getItem(`waConsent:${APP_SQUAD}`) === "true"; } catch { return false; } });
+  const [waConsent, setWaConsent] = useState(() => { try { return localStorage.getItem(`waConsent:${APP_SQUAD}:v2`) === "true"; } catch { return false; } });
   const [tcAccepted, setTcAccepted] = useState(() => { try { return localStorage.getItem(`tcVersion:${APP_SQUAD}`) === "v2"; } catch { return false; } });
 
   const showToast = useCallback((msg) => {
@@ -1063,13 +1063,13 @@ function EmailCoachesButton({ label = "📧 Message the Coaches", player }) {
 function WAConsentButton({ waConsent, setWaConsent, player, userEmail }) {
   const [showModal, setShowModal] = useState(false);
   const [ticked, setTicked]       = useState(false);
+  const [saving, setSaving]       = useState(false);
 
   async function recordWhatsAppConsent() {
     const email = userEmail || null;
     const playerId = player?.id || null;
 
     try {
-      // If localStorage already says consent was given, backfill the audit row once if missing.
       let q = sb
         .from("audit_log")
         .select("id")
@@ -1103,34 +1103,33 @@ function WAConsentButton({ waConsent, setWaConsent, player, userEmail }) {
 
   async function handleClick() {
     if (waConsent) {
-      // Consent may exist in browser storage from before audit logging worked.
-      // Record/backfill it, then open WhatsApp.
-      const popup = window.open("", "_blank", "noopener,noreferrer");
+      setSaving(true);
       await recordWhatsAppConsent();
-      if (popup) popup.location.href = WHATSAPP_LINK;
-      else window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
+      setSaving(false);
+      window.location.href = WHATSAPP_LINK;
     } else {
+      setTicked(false);
       setShowModal(true);
     }
   }
 
   async function handleConfirm() {
-    if (!ticked) return;
+    if (!ticked || saving) return;
 
-    try { localStorage.setItem(`waConsent:${APP_SQUAD}`, "true"); } catch(e) {}
-    setWaConsent(true);
-    setShowModal(false);
+    setSaving(true);
+    try {
+      localStorage.setItem(`waConsent:${APP_SQUAD}:v2`, "true");
+    } catch(e) {}
 
-    // Open the tab immediately so browsers do not block it, then log consent.
-    const popup = window.open("", "_blank", "noopener,noreferrer");
     await recordWhatsAppConsent();
-    if (popup) popup.location.href = WHATSAPP_LINK;
-    else window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
+    setWaConsent(true);
+    setSaving(false);
+    setShowModal(false);
+    window.location.href = WHATSAPP_LINK;
   }
 
   return (
     <>
-      {/* Always-visible WhatsApp button */}
       <button onClick={handleClick}
         style={{display:"inline-flex",alignItems:"center",gap:8,background:"#25D366",
                 color:"white",fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,
@@ -1164,16 +1163,16 @@ function WAConsentButton({ waConsent, setWaConsent, player, userEmail }) {
               <span>I understand and consent to joining the WhatsApp group.</span>
             </label>
 
-            <button onClick={handleConfirm} disabled={!ticked}
+            <button onClick={handleConfirm} disabled={!ticked || saving}
               style={{width:"100%",padding:"13px",border:"none",borderRadius:12,
-                      background:ticked?"#25D366":"#b5d9c2",color:"white",fontWeight:900,
+                      background:ticked && !saving ? "#25D366" : "#b5d9c2",color:"white",fontWeight:900,
                       fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,
-                      cursor:ticked?"pointer":"not-allowed"}}>
-              Agree & Join
+                      cursor:ticked && !saving ? "pointer" : "not-allowed"}}>
+              {saving ? "Saving..." : "Agree & Join"}
             </button>
-            <button onClick={() => setShowModal(false)}
+            <button onClick={() => setShowModal(false)} disabled={saving}
               style={{width:"100%",marginTop:10,padding:"11px",border:"2px solid #e0e0e0",
-                      borderRadius:12,background:"white",cursor:"pointer",color:"#666",
+                      borderRadius:12,background:"white",cursor:saving?"not-allowed":"pointer",color:"#666",
                       fontFamily:"'Barlow Condensed',sans-serif",fontSize:16}}>
               Cancel
             </button>
@@ -1430,42 +1429,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
               <div className="squad-body">
                 <p className="squad-desc">{w.squad.desc}</p>
                 <div className="squad-cta">👥 Get 3–4 lads together — this is your highest scoring task!</div>
-                {/* Three drill videos for this week */}
-                <div style={{display:"flex",gap:8,marginBottom:12}}>
-                  {[
-                    ...w.speed.map(s => ({ ytId: s.youtube_id, label: s.label.replace(/^⚡\s*/,"") })),
-                    ...w.skills.map(s => ({ ytId: s.youtube_id, label: s.label.replace(/^[🏑⚽]\s*/,"") })),
-                  ].slice(0,3).map((v, idx) => {
-                    const vidKey = `squad-${idx}`;
-                    const thumbUrl = v.ytId && !v.ytId.startsWith("Demo")
-                      ? `https://img.youtube.com/vi/${v.ytId}/hqdefault.jpg`
-                      : null;
-                    return (
-                      <div key={idx} style={{flex:1,display:"flex",flexDirection:"column",gap:4}}>
-                        <div style={{position:"relative",paddingBottom:"56.25%",borderRadius:8,overflow:"hidden",background:"#000",cursor:"pointer"}}
-                          onClick={() => setPlayingVideo(playingVideo === vidKey ? null : vidKey)}>
-                          {playingVideo === vidKey ? (
-                            <iframe
-                              src={`https://www.youtube.com/embed/${v.ytId}?autoplay=1&rel=0`}
-                              style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
-                              allow="autoplay; encrypted-media" allowFullScreen />
-                          ) : thumbUrl ? (
-                            <>
-                              <img src={thumbUrl} alt="" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover"}} />
-                              <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.2)"}} />
-                              <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:28,height:28,borderRadius:"50%",background:"rgba(255,0,0,0.9)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12}}>▶</div>
-                            </>
-                          ) : (
-                            <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,#4a0a0e,#1a0405)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🎬</div>
-                          )}
-                        </div>
-                        <div style={{fontSize:9,color:"rgba(255,255,255,0.7)",lineHeight:1.2,textAlign:"center",fontWeight:600}}>
-                          {v.label.split(":")[0].trim()}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+
                 {canToggle && (
                   <button className={`squad-mark${done?" done":""}`} onClick={()=>onToggle(k,PTS.squad,w.squad.label)}>
                     {done?"✕ MARK INCOMPLETE":"✓ SQUAD SESSION DONE"}
@@ -2808,15 +2772,6 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
 
       <div style={{marginTop:20,textAlign:"center"}}>
         <button className="link-btn" onClick={()=>sb.auth.signOut()}>Sign out</button>
-      </div>
-
-      <div className="card" style={{marginTop:20}}>
-        <div className="card-bd" style={{fontSize:13,color:"var(--mid)",lineHeight:1.7}}>
-          To add real drill videos, edit the <code style={{background:"#f0f0f0",padding:"1px 5px",borderRadius:4}}>WEEKS</code> array at the top of this file.
-          <div style={{marginTop:10,padding:"10px 12px",background:"#f0f7f1",borderRadius:8}}>
-            e.g. youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong> → use <strong>dQw4w9WgXcQ</strong>
-          </div>
-        </div>
       </div>
     </div>
   );
