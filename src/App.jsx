@@ -469,7 +469,193 @@ function TCReacceptModal({ userEmail, onAccepted }) {
   );
 }
 
+
+function makeChildAccessToken() {
+  try {
+    const bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  } catch (_) {
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 18)}`;
+  }
+}
+
+function ChildVersionBox({ player, showToast }) {
+  const [token, setToken] = useState(player?.child_access_token || "");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setToken(player?.child_access_token || "");
+  }, [player?.id, player?.child_access_token]);
+
+  async function getOrCreateToken() {
+    if (!player?.id) return "";
+    if (token) return token;
+
+    const nextToken = makeChildAccessToken();
+    const { error } = await sb
+      .from("players")
+      .update({ child_access_token: nextToken })
+      .eq("id", player.id)
+      .eq("squad", APP_SQUAD);
+
+    if (error) throw error;
+    setToken(nextToken);
+    return nextToken;
+  }
+
+  async function copyChildLink() {
+    if (!player?.id) {
+      showToast("Select a player first.");
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      const nextToken = await getOrCreateToken();
+      const link = `${window.location.origin}${window.location.pathname}?child=${nextToken}`;
+      await navigator.clipboard.writeText(link);
+      showToast("Child app link copied!");
+    } catch (e) {
+      console.error("Child link error:", e);
+      showToast("Could not create the child link. Check Supabase setup and try again.");
+    }
+
+    setBusy(false);
+  }
+
+  async function shareChildLink() {
+    if (!player?.id) {
+      showToast("Select a player first.");
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      const nextToken = await getOrCreateToken();
+      const link = `${window.location.origin}${window.location.pathname}?child=${nextToken}`;
+
+      if (navigator.share) {
+        await navigator.share({
+          title: "Fingallians Child App",
+          text: `${player?.name || "Player"}'s child-friendly challenge view`,
+          url: link
+        });
+      } else {
+        await navigator.clipboard.writeText(link);
+        showToast("Child app link copied!");
+      }
+    } catch (e) {
+      console.error("Child share error:", e);
+      showToast("Could not share the child link. Use Copy Link instead.");
+    }
+
+    setBusy(false);
+  }
+
+  return (
+    <div style={{background:"linear-gradient(135deg,#fff9e8 0%,#ffffff 100%)",border:"2px solid var(--gold)",borderRadius:"var(--radius)",padding:"16px 18px",marginTop:12,boxShadow:"var(--shadow)"}}>
+      <div style={{textAlign:"center",marginBottom:8}}>
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,letterSpacing:"0.03em",fontWeight:900,color:"var(--g)"}}>
+          Want your child to have their own version?
+        </div>
+      </div>
+      <div style={{fontSize:13,color:"var(--mid)",lineHeight:1.6,marginBottom:12,textAlign:"center"}}>
+        If they have their own phone or tablet, you can send them a child-friendly version of the app. They'll be able to complete tasks and watch their progress while everything stays synced with your dashboard.
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        <button className="btn btn-green" style={{fontSize:16}} onClick={copyChildLink} disabled={busy}>
+          {busy ? "…" : "Copy Link"}
+        </button>
+        <button className="btn btn-ghost" style={{fontSize:16}} onClick={shareChildLink} disabled={busy}>
+          Share
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ChildSimpleView({ player, checks, playerLoaded, pts, weeksDone, showToast, onToggle }) {
+  const currentWeekIndex = Math.min(Math.max(Math.floor((new Date() - new Date("2026-06-29")) / (7*24*60*60*1000)), 0), 7);
+  const w = WEEKS[currentWeekIndex];
+  const ps = PHASE_STYLE[w.phase];
+  const wPts = weekPts(w, checks);
+  const wMax = weekMaxPts(w);
+  const pct = Math.round((wPts / wMax) * 100);
+  const maxPossible = WEEKS.reduce((a,wk) => a + weekMaxPts(wk), 0);
+  const totalPct = Math.round((pts / maxPossible) * 100);
+
+  if (!playerLoaded) {
+    return <div className="loader"><div className="spinner"/><span>Loading your app…</span></div>;
+  }
+
+  if (!player) {
+    return (
+      <div className="auth-wrap">
+        <div className="card">
+          <div className="card-bd" style={{textAlign:"center"}}>
+            <div style={{fontSize:52,marginBottom:12}}>🔗</div>
+            <h2 style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:"var(--g)",margin:"0 0 8px"}}>Link not found</h2>
+            <p style={{fontSize:14,color:"var(--mid)",lineHeight:1.6}}>This child app link is not active. Ask your parent or guardian to create a new link from the parent version of the app.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="home-wrap">
+      <div className="welcome-card">
+        <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.18)",borderRadius:999,padding:"7px 12px",fontSize:13,fontWeight:900,letterSpacing:"0.04em",marginBottom:12}}>
+          {player?.name ? `${player.name.split(" ")[0]}'s App` : "Your App"}
+        </div>
+        <h2>THIS WEEK'S CHALLENGE</h2>
+        <div className="player-name">👤 {player.name}</div>
+        <div style={{fontSize:13,opacity:0.86,marginTop:6}}>Week {w.week} of 8 · {w.dates}</div>
+        <div className="pts-row">
+          <div className="pts-box"><div className="num">{pts}</div><div className="lbl2">Total Points</div></div>
+          <div className="pts-box"><div className="num">{totalPct}%</div><div className="lbl2">Progress</div></div>
+          <div className="pts-box"><div className="num">{weeksDone}</div><div className="lbl2">Weeks Done</div></div>
+        </div>
+      </div>
+
+      <div style={{background:"white",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:"14px 16px",marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <strong style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,color:"var(--g)"}}>This week</strong>
+          <span style={{fontSize:13,color:"var(--mid)"}}>{wPts}/{wMax} pts</span>
+        </div>
+        <div className="prog"><div style={{width:`${pct}%`,background:ps.accent}} /></div>
+      </div>
+
+      <div style={{background:"white",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:"12px 14px",marginBottom:12,textAlign:"center",fontSize:13,color:"var(--mid)",lineHeight:1.6}}>
+        Tap an activity to mark it complete. It will sync back to the parent version automatically.
+      </div>
+
+      <WeekDetail
+        w={w}
+        ps={ps}
+        pct={pct}
+        wPts={wPts}
+        wMax={wMax}
+        checks={checks}
+        onToggle={onToggle}
+        player={player}
+        showToast={showToast}
+      />
+
+      <div style={{textAlign:"center",fontSize:12,color:"var(--muted)",marginTop:16,paddingBottom:18}}>
+        Parent Version has WhatsApp, consent, admin and full plan access.
+      </div>
+    </div>
+  );
+}
+
+
 export default function App() {
+  const childToken = new URLSearchParams(window.location.search).get("child");
+  const isChildView = !!childToken;
   const [session, setSession]   = useState(null);
   const [loading, setLoading]   = useState(true);
   const [tab, setTab]           = useState("home");
@@ -488,20 +674,62 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (isChildView) {
+      setLoading(false);
+      return;
+    }
     sb.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
     const { data: { subscription } } = sb.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isChildView]);
 
   useEffect(() => {
+    async function loadChildView() {
+      if (!childToken) return;
+      setLoading(false);
+      setPlayerLoaded(false);
+
+      const { data, error } = await sb
+        .from("players")
+        .select("id, name, squad, child_access_token")
+        .eq("child_access_token", childToken)
+        .eq("squad", APP_SQUAD)
+        .maybeSingle();
+
+      if (error || !data) {
+        setPlayer(null);
+        setChecks({});
+        setPlayerLoaded(true);
+        return;
+      }
+
+      setPlayer(data);
+
+      const { data: comps } = await sb
+        .from("task_completions")
+        .select("task_key")
+        .eq("player_id", data.id);
+
+      const c = {};
+      [...new Set((comps || []).map(r => r.task_key))].forEach(k => { c[k] = true; });
+      setChecks(c);
+      setPlayerLoaded(true);
+    }
+
+    loadChildView();
+  }, [childToken]);
+
+
+  useEffect(() => {
+    if (isChildView) return;
     if (!session) { setPlayer(null); setChecks({}); setPlayerLoaded(false); return; }
     if (ADMIN_EMAILS.includes(session.user.email)) { setPlayerLoaded(true); loadAllPlayers(); return; }
     setPlayerLoaded(false);
     loadPlayerData();
-  }, [session]);
+  }, [session, isChildView]);
 
   async function loadPlayerData() {
     try {
@@ -513,7 +741,7 @@ export default function App() {
       if (link?.player_id) {
         const { data: playerData } = await sb
           .from("players")
-          .select("id, name, squad")
+          .select("id, name, squad, child_access_token")
           .eq("id", link.player_id)
           .eq("squad", APP_SQUAD)
           .maybeSingle();
@@ -546,9 +774,9 @@ export default function App() {
 
   async function toggleTask(taskKey, pts, label) {
     if (!player) return;
-    // Block future weeks — super admin (e.t.archbold@gmail.com) can bypass this
+
     const weekMatch = taskKey.match(/^w(\d+)-/);
-    if (weekMatch && session?.user?.email !== SUPER_ADMIN_EMAIL) {
+    if (weekMatch && !isChildView && session?.user?.email !== SUPER_ADMIN_EMAIL) {
       const weekNum  = parseInt(weekMatch[1], 10);
       const weekStart = new Date("2026-06-29");
       weekStart.setDate(weekStart.getDate() + (weekNum - 1) * 7);
@@ -558,9 +786,44 @@ export default function App() {
         return;
       }
     }
+
     const done = checks[taskKey];
+    const nextComplete = !done;
+
+    if (isChildView) {
+      const { error } = await sb.rpc("child_set_task_completion", {
+        p_child_access_token: childToken,
+        p_task_key: taskKey,
+        p_complete: nextComplete
+      });
+
+      if (error) {
+        console.error("Child task completion failed", error);
+        showToast("❌ Could not save that activity — please try again.");
+        return;
+      }
+
+      if (nextComplete) {
+        setChecks(c => ({ ...c, [taskKey]: true }));
+        setConfettiTrigger(t => t + 1);
+        showToast(`✅ ${label} logged! +${pts} pts`);
+      } else {
+        setChecks(c => { const n={...c}; delete n[taskKey]; return n; });
+        showToast(`↩️ ${label} removed`);
+      }
+
+      logAudit(
+        "Child Version",
+        player,
+        nextComplete ? "task_complete" : "task_incomplete",
+        `${label} ${nextComplete ? "marked complete" : "marked incomplete"} from child app`,
+        null,
+        nextComplete ? `+${pts} pts` : null
+      );
+      return;
+    }
+
     if (done) {
-      // Remove the child's completion for this task. Any linked parent can unmark it.
       await sb.from("task_completions")
         .delete()
         .eq("player_id", player.id)
@@ -568,7 +831,6 @@ export default function App() {
       setChecks(c => { const n={...c}; delete n[taskKey]; return n; });
       logAudit(session.user.email, player, "task_incomplete", label);
     } else {
-      // Keep one completion per child/task, even if multiple parent emails are linked.
       await sb.from("task_completions")
         .delete()
         .eq("player_id", player.id)
@@ -593,7 +855,6 @@ export default function App() {
       logAudit(session.user.email, player, "task_complete", label, null, `+${pts} pts`);
     }
   }
-
   async function linkPlayer(playerId) {
     try {
       await sb.from("parent_players")
@@ -609,6 +870,25 @@ export default function App() {
   const isSuperAdmin = session?.user?.email === SUPER_ADMIN_EMAIL;
   const pts     = totalPts(checks);
   const weeksDone = WEEKS.filter(w => weekPts(w, checks) === weekMaxPts(w)).length;
+
+  if (isChildView) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <ChildSimpleView
+          player={player}
+          checks={checks}
+          playerLoaded={playerLoaded}
+          pts={pts}
+          weeksDone={weeksDone}
+          showToast={showToast}
+          onToggle={toggleTask}
+        />
+        {toast && <div className="toast">{toast}</div>}
+        <Confetti trigger={confettiTrigger} />
+      </>
+    );
+  }
 
   if (loading) return (
     <><style>{CSS}</style>
@@ -928,7 +1208,7 @@ function LinkPlayerScreen({ onLink }) {
         </div>
       </div>
       <div style={{textAlign:"center",marginTop:8}}>
-        <button className="link-btn" onClick={()=>sb.auth.signOut()}>Sign out</button>
+        <button className="link-btn" onClick={async()=>{ await sb.auth.signOut(); window.location.href = window.location.pathname; }}>Sign out</button>
       </div>
     </div>
   );
@@ -1234,6 +1514,8 @@ function HomeTab({ player, checks, pts, weeksDone, onNav, onToggle, showToast, w
       <WeekDetail w={w} ps={ps} pct={pct} wPts={wPts} wMax={wMax} checks={checks} onToggle={onToggle} player={player} showToast={showToast} />
       <button className="btn btn-ghost" style={{marginTop:4}} onClick={onNav}>VIEW FULL 8-WEEK PLAN →</button>
 
+      <ChildVersionBox player={player} showToast={showToast} />
+
       {/* Share your skills */}
       <div style={{background:"linear-gradient(135deg,#7d1018 0%,var(--g) 100%)",borderRadius:"var(--radius)",padding:"16px 18px",marginTop:12,color:"white",textAlign:"center"}}>
         <div style={{fontSize:24,marginBottom:6}}>📱🏑⚽</div>
@@ -1245,7 +1527,7 @@ function HomeTab({ player, checks, pts, weeksDone, onNav, onToggle, showToast, w
       </div>
 
       <div style={{textAlign:"center",marginTop:14,paddingBottom:8}}>
-        <button className="link-btn" style={{color:"var(--muted)",fontSize:13}} onClick={()=>sb.auth.signOut()}>Sign out</button>
+        <button className="link-btn" style={{color:"var(--muted)",fontSize:13}} onClick={async()=>{ await sb.auth.signOut(); window.location.href = window.location.pathname; }}>Sign out</button>
       </div>
     </div>
   );
@@ -2814,7 +3096,7 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
       )}
 
       <div style={{marginTop:20,textAlign:"center"}}>
-        <button className="link-btn" onClick={()=>sb.auth.signOut()}>Sign out</button>
+        <button className="link-btn" onClick={async()=>{ await sb.auth.signOut(); window.location.href = window.location.pathname; }}>Sign out</button>
       </div>
     </div>
   );
