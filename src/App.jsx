@@ -1100,7 +1100,7 @@ function WAConsentButton({ waConsent, setWaConsent, player, userEmail }) {
       setSaving(true);
       await recordWhatsAppConsent();
       setSaving(false);
-      window.location.href = WHATSAPP_LINK;
+      window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
     } else {
       setTicked(false);
       setShowModal(true);
@@ -1119,7 +1119,7 @@ function WAConsentButton({ waConsent, setWaConsent, player, userEmail }) {
     setWaConsent(true);
     setSaving(false);
     setShowModal(false);
-    window.location.href = WHATSAPP_LINK;
+    window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
   }
 
   return (
