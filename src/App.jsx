@@ -12,12 +12,12 @@ const SUPER_ADMIN_EMAIL = "e.t.archbold@gmail.com";
 const FORMSPREE_URL     = "https://formspree.io/f/mrewqpqo";
 const WHATSAPP_LINK     = "https://chat.whatsapp.com/FJLfHJpjKbi6KFGzHbpEoQ";
 const APP_SQUAD         = "2017 Boys";
+const CURRENT_TERMS_VERSION = "v2"; // Only change this when the actual Terms & Conditions change.
 const CONSENT_START_DATE = "2026-06-26T00:00:00.000Z";
 
-// No admin account is pre-linked to a child in the 2017 Boys app.
-// Elliot Gaffney should exist in Supabase as the only player with squad = "2017 Boys".
-// His parent will link to him when they register/select him.
+// Admin accounts that should be auto-linked to a player by name
 const ADMIN_PLAYER_NAMES = {};
+// Elaine's child — auto-linked if not already linked
 const ADMIN_PLAYER_NAME = null;
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -48,7 +48,11 @@ const CHALLENGE_LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCA
 const WEEKS = [
   {
     week:1, phase:"Foundation", dates:"Jun 29-Jul 5",
-    runs:[{label:"Run 1",distance:"1k"},{label:"Run 2",distance:"1k"},{label:"Run 3",distance:"1.5k"}],
+    runs:[
+      {label:"1k Run",distance:"1k",icon:"🏃"},
+      {label:"Star Jumps",distance:"20 reps",icon:"⭐"},
+      {label:"Frog Jumps",distance:"10 jumps",icon:"🐸"}
+    ],
     speed:[{id:"s1a",label:"⚡ Fall Forward",desc:"Practise for 5-8 minutes at least once this week. Learn the name: Fall Forward. Keep it fun: tall body, gentle lean, quick feet.",youtube_id:"PTmWJ4kk0yE"}],
     skills:[
       {id:"h1a",label:"🏑 Roll Lift",desc:"10-15 minutes at least once this week. Roll the sliotar slowly and scoop it up. Start walking pace, both sides if possible.",youtube_id:"Beu3_ecp53Q"},
@@ -58,7 +62,11 @@ const WEEKS = [
   },
   {
     week:2, phase:"Foundation", dates:"Jul 6-12",
-    runs:[{label:"Run 1",distance:"1k"},{label:"Run 2",distance:"1.5k"},{label:"Run 3",distance:"1.5k"}],
+    runs:[
+      {label:"1.2k Run",distance:"1.2k",icon:"🏃"},
+      {label:"Bear Crawls",distance:"10 metres",icon:"🐻"},
+      {label:"Sliotar Keepy-Ups",distance:"10 touches",icon:"🏑"}
+    ],
     speed:[{id:"s2a",label:"⚡ Stationary Arm Swing",desc:"Practise for 5-8 minutes. Strong arms, relaxed shoulders. This is a simple speed habit for young players.",youtube_id:"NUmUwXqG1pE"}],
     skills:[
       {id:"h2a",label:"🏑 Jab Lift",desc:"10-15 minutes at least once this week. Keep the ball still first, then try a slow roll. Count clean lifts.",youtube_id:"ob1hmrWKI58"},
@@ -68,7 +76,11 @@ const WEEKS = [
   },
   {
     week:3, phase:"Building", dates:"Jul 13-19",
-    runs:[{label:"Run 1",distance:"1.5k"},{label:"Run 2",distance:"1.5k"},{label:"Run 3",distance:"2k"}],
+    runs:[
+      {label:"1.4k Run",distance:"1.4k",icon:"🏃"},
+      {label:"Crab Walks",distance:"10 metres",icon:"🦀"},
+      {label:"Star Jumps",distance:"25 reps",icon:"⭐"}
+    ],
     speed:[{id:"s3a",label:"⚡ A March",desc:"Practise for 5-8 minutes. March tall, knees up, strong arms. This is easier than sprinting and great for technique.",youtube_id:"HISmA4pZWp0"}],
     skills:[
       {id:"h3a",label:"🏑 Wall Strike and Control",desc:"10-15 minutes at least once this week. Stand close to the wall, strike gently and control the return.",youtube_id:"XVFP1xHeNo4"},
@@ -78,7 +90,11 @@ const WEEKS = [
   },
   {
     week:4, phase:"Building", dates:"Jul 20-26",
-    runs:[{label:"Run 1",distance:"1.5k"},{label:"Run 2",distance:"2k"},{label:"Run 3",distance:"2k"}],
+    runs:[
+      {label:"1.6k Run",distance:"1.6k",icon:"🏃"},
+      {label:"Frog Jumps",distance:"15 jumps",icon:"🐸"},
+      {label:"Bear Crawls",distance:"15 metres",icon:"🐻"}
+    ],
     speed:[{id:"s4a",label:"⚡ Ankling Drill",desc:"Practise for 5-8 minutes. Small quick steps, stay light on your feet. Keep the distance short.",youtube_id:"11xHsMcomf4"}],
     skills:[
       {id:"h4a",label:"🏑 Roll Lift Refresh",desc:"10-15 minutes at least once this week. Go back to the roll lift and see if you can do more clean lifts than Week 1.",youtube_id:"Beu3_ecp53Q"},
@@ -88,7 +104,11 @@ const WEEKS = [
   },
   {
     week:5, phase:"Push", dates:"Jul 27-Aug 2",
-    runs:[{label:"Run 1",distance:"2k"},{label:"Run 2",distance:"2k"},{label:"Run 3",distance:"2k"}],
+    runs:[
+      {label:"1.8k Run",distance:"1.8k",icon:"🏃"},
+      {label:"Sliotar Keepy-Ups",distance:"15 touches",icon:"🏑"},
+      {label:"Crab Walks",distance:"15 metres",icon:"🦀"}
+    ],
     speed:[{id:"s5a",label:"⚡ Butt Kicks",desc:"Practise for 5-8 minutes. Heel up, light steps, relaxed arms. Do short bursts only.",youtube_id:"p7OBdAJu9E8"}],
     skills:[
       {id:"h5a",label:"🏑 Strike from the Hand",desc:"10-15 minutes at least once this week. Start gently, both sides if possible. Focus on clean contact.",youtube_id:"A4qGKdeviHU"},
@@ -98,7 +118,11 @@ const WEEKS = [
   },
   {
     week:6, phase:"Push", dates:"Aug 3-9",
-    runs:[{label:"Run 1",distance:"2k"},{label:"Run 2",distance:"2k"},{label:"Run 3",distance:"2.5k"}],
+    runs:[
+      {label:"2k Run",distance:"2k",icon:"🏃"},
+      {label:"Star Jumps",distance:"30 reps",icon:"⭐"},
+      {label:"Bear Crawls",distance:"20 metres",icon:"🐻"}
+    ],
     speed:[{id:"s6a",label:"⚡ A Skip",desc:"Practise for 5-8 minutes. Keep it bouncy and controlled. Short distance only, quality over speed.",youtube_id:"2I4rDiFs6Ec"}],
     skills:[
       {id:"h6a",label:"🏑 Jab Lift Challenge",desc:"10-15 minutes at least once this week. Try to beat your best clean jab-lift score from Week 2.",youtube_id:"ob1hmrWKI58"},
@@ -108,7 +132,11 @@ const WEEKS = [
   },
   {
     week:7, phase:"Peak", dates:"Aug 10-16",
-    runs:[{label:"Run 1",distance:"2k"},{label:"Run 2",distance:"2.5k"},{label:"Run 3",distance:"2.5k"}],
+    runs:[
+      {label:"2.2k Run",distance:"2.2k",icon:"🏃"},
+      {label:"Frog Jumps",distance:"20 jumps",icon:"🐸"},
+      {label:"Sliotar Keepy-Ups",distance:"20 touches",icon:"🏑"}
+    ],
     speed:[{id:"s7a",label:"⚡ Wall Knee Drive",desc:"Practise for 5-8 minutes. Gentle wall position, knee drive up, stay balanced. Keep sets short.",youtube_id:"ZW9rjy9TgGM"}],
     skills:[
       {id:"h7a",label:"🏑 Wall Strike and Control",desc:"10-15 minutes at least once this week. Close to the wall, easy strikes, clean catches and control.",youtube_id:"XVFP1xHeNo4"},
@@ -118,7 +146,11 @@ const WEEKS = [
   },
   {
     week:8, phase:"Peak", dates:"Aug 17-23",
-    runs:[{label:"Run 1",distance:"2.5k"},{label:"Run 2",distance:"2.5k"},{label:"Run 3",distance:"3k"}],
+    runs:[
+      {label:"2.5k Run",distance:"2.5k",icon:"🏃"},
+      {label:"Crab Walks",distance:"20 metres",icon:"🦀"},
+      {label:"Star Jumps",distance:"40 reps",icon:"⭐"}
+    ],
     speed:[{id:"s8a",label:"⚡ Fall Forward Finale",desc:"Final week: practise Fall Forward again for 5-8 minutes. Show how much cleaner and quicker your start looks now.",youtube_id:"PTmWJ4kk0yE"}],
     skills:[
       {id:"h8a",label:"🏑 Strike from the Hand",desc:"10-15 minutes at least once this week. Final-week striking practice: clean contact, safe space, both sides if possible.",youtube_id:"A4qGKdeviHU"},
@@ -127,6 +159,7 @@ const WEEKS = [
     squad:{label:"Squad Session - Final Team Finish",desc:"Last week! Get the team together, finish strong and celebrate completing the challenge. Short skills circuit, fun target game and squad photo/screenshot for bonus points.",youtube_id:"PTmWJ4kk0yE"},
   },
 ];
+
 
 const PHASE_STYLE = {
   Foundation:{ bg:"#e6f4ea", accent:"#1e6b2e", chip:"#a8d5b0" },
@@ -144,28 +177,189 @@ const squadKey = (week)     => `w${week}-squad`;
 
 const PTS = { run:3, skill:2, speed:2, squad:4 };
 
+const isApproved = (v) => v === true || v === "approved";
+const isPending  = (v) => v === "pending";
+const isRejected = (v) => v === "rejected";
+
 function totalPts(checks) {
   let p = 0;
   WEEKS.forEach(w => {
-    (w.runs || []).forEach((_,i)  => { if(checks[runKey(w.week,i)])   p+=PTS.run; });
-    (w.skills || []).forEach(s    => { if(checks[skillKey(w.week,s.id)]) p+=PTS.skill; });
-    (w.speed || []).forEach(s     => { if(checks[speedKey(w.week,s.id)]) p+=PTS.speed; });
-    if(checks[squadKey(w.week)]) p+=PTS.squad;
+    w.runs.forEach((_,i)  => { if(isApproved(checks[runKey(w.week,i)]))   p+=PTS.run; });
+    w.skills.forEach(s    => { if(isApproved(checks[skillKey(w.week,s.id)])) p+=PTS.skill; });
+    w.speed.forEach(s     => { if(isApproved(checks[speedKey(w.week,s.id)])) p+=PTS.speed; });
+    if(isApproved(checks[squadKey(w.week)])) p+=PTS.squad;
   });
   return p;
 }
 
 function weekPts(w, checks) {
   let p = 0;
-  (w.runs || []).forEach((_,i) => { if(checks[runKey(w.week,i)]) p+=PTS.run; });
-  (w.skills || []).forEach(s   => { if(checks[skillKey(w.week,s.id)]) p+=PTS.skill; });
-  (w.speed || []).forEach(s    => { if(checks[speedKey(w.week,s.id)]) p+=PTS.speed; });
-  if(checks[squadKey(w.week)]) p+=PTS.squad;
+  w.runs.forEach((_,i) => { if(isApproved(checks[runKey(w.week,i)])) p+=PTS.run; });
+  w.skills.forEach(s   => { if(isApproved(checks[skillKey(w.week,s.id)])) p+=PTS.skill; });
+  w.speed.forEach(s    => { if(isApproved(checks[speedKey(w.week,s.id)])) p+=PTS.speed; });
+  if(isApproved(checks[squadKey(w.week)])) p+=PTS.squad;
   return p;
 }
 
 function weekMaxPts(w) {
-  return (w.runs || []).length*PTS.run + (w.skills || []).length*PTS.skill + (w.speed || []).length*PTS.speed + PTS.squad;
+  return w.runs.length*PTS.run + w.skills.length*PTS.skill + w.speed.length*PTS.speed + PTS.squad;
+}
+
+function playerActivitySummary(checks) {
+  const summary = {
+    runsDone: 0, runsTotal: 0,
+    skillsDone: 0, skillsTotal: 0,
+    speedDone: 0, speedTotal: 0,
+    squadApproved: 0, squadPending: 0, squadReturned: 0, squadTotal: WEEKS.length,
+    approvedCount: 0, pendingCount: 0,
+  };
+
+  const weeks = WEEKS.map(w => {
+    const approved = [];
+    const pending = [];
+    const returned = [];
+
+    w.runs.forEach((r,i) => {
+      summary.runsTotal += 1;
+      const state = checks[runKey(w.week,i)];
+      if (isApproved(state)) {
+        summary.runsDone += 1;
+        summary.approvedCount += 1;
+        approved.push(`${r.icon || "🏃"} ${r.label} (${r.distance})`);
+      }
+    });
+
+    w.speed.forEach(s => {
+      summary.speedTotal += 1;
+      const state = checks[speedKey(w.week,s.id)];
+      if (isApproved(state)) {
+        summary.speedDone += 1;
+        summary.approvedCount += 1;
+        approved.push((s.label || "").replace(/^⚡\s*/, ""));
+      }
+    });
+
+    w.skills.forEach(s => {
+      summary.skillsTotal += 1;
+      const state = checks[skillKey(w.week,s.id)];
+      if (isApproved(state)) {
+        summary.skillsDone += 1;
+        summary.approvedCount += 1;
+        approved.push((s.label || "").replace(/^[🏑⚽]\s*/, ""));
+      }
+    });
+
+    const squadState = checks[squadKey(w.week)];
+    if (isApproved(squadState)) {
+      summary.squadApproved += 1;
+      summary.approvedCount += 1;
+      approved.push("Squad Session");
+    } else if (isPending(squadState)) {
+      summary.squadPending += 1;
+      summary.pendingCount += 1;
+      pending.push("Squad Session awaiting approval");
+    } else if (isRejected(squadState)) {
+      summary.squadReturned += 1;
+      returned.push("Squad Session returned");
+    }
+
+    return { week: w.week, dates: w.dates, approved, pending, returned };
+  }).filter(w => w.approved.length || w.pending.length || w.returned.length);
+
+  return { weeks, summary };
+}
+
+function ProgressMiniBar({ done, total }) {
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return (
+    <div style={{height:6,background:"#f0dede",borderRadius:999,overflow:"hidden",marginTop:4}}>
+      <div style={{height:"100%",width:`${pct}%`,background:"var(--g)",borderRadius:999}} />
+    </div>
+  );
+}
+
+function PlayerActivityModal({ player, checks, points, maxPossible, onClose }) {
+  const { weeks, summary } = playerActivitySummary(checks || {});
+  const pct = maxPossible ? Math.round((points / maxPossible) * 100) : 0;
+  const categories = [
+    { label:"Fitness", done:summary.runsDone, total:summary.runsTotal },
+    { label:"Skills", done:summary.skillsDone, total:summary.skillsTotal },
+    { label:"Speed", done:summary.speedDone, total:summary.speedTotal },
+    { label:"Squad", done:summary.squadApproved, total:summary.squadTotal },
+  ];
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.72)",zIndex:10030,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{background:"white",borderRadius:18,width:"100%",maxWidth:660,maxHeight:"88vh",overflow:"hidden",boxShadow:"0 18px 60px rgba(0,0,0,0.35)"}}>
+        <div style={{background:"linear-gradient(135deg,var(--g),#4a0a0e)",color:"white",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+          <div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,color:"var(--gold)",letterSpacing:"0.03em"}}>{player.name}</div>
+            <div style={{fontSize:12,opacity:0.75}}>{points} points · {pct}% complete</div>
+          </div>
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.16)",color:"white",border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"7px 10px",cursor:"pointer",fontWeight:900}}>✕</button>
+        </div>
+
+        <div style={{padding:14,overflowY:"auto",maxHeight:"calc(88vh - 78px)"}}>
+          <div style={{background:"#fdfafa",border:"1px solid #f0dede",borderRadius:14,padding:"12px 14px",marginBottom:12}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10,marginBottom:10}}>
+              <div style={{textAlign:"center",background:"white",borderRadius:12,padding:"10px"}}>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:30,color:"var(--g)",lineHeight:1}}>{points}</div>
+                <div style={{fontSize:10,color:"var(--muted)",fontWeight:900,textTransform:"uppercase",letterSpacing:"0.06em"}}>Points</div>
+              </div>
+              <div style={{textAlign:"center",background:"white",borderRadius:12,padding:"10px"}}>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:30,color:"var(--g)",lineHeight:1}}>{pct}%</div>
+                <div style={{fontSize:10,color:"var(--muted)",fontWeight:900,textTransform:"uppercase",letterSpacing:"0.06em"}}>Complete</div>
+              </div>
+            </div>
+
+            {categories.map(c => (
+              <div key={c.label} style={{marginBottom:9}}>
+                <div style={{display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:900,color:"var(--dark)"}}>
+                  <span>{c.label}</span><span>{c.done}/{c.total}</span>
+                </div>
+                <ProgressMiniBar done={c.done} total={c.total} />
+              </div>
+            ))}
+
+            {(summary.squadPending > 0 || summary.squadReturned > 0) && (
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:8,lineHeight:1.5}}>
+                🟠 {summary.squadPending} awaiting approval · ↺ {summary.squadReturned} returned
+              </div>
+            )}
+          </div>
+
+          {weeks.length === 0 && (
+            <div style={{textAlign:"center",color:"var(--muted)",padding:"28px 0",fontSize:13}}>No activities completed yet.</div>
+          )}
+
+          {weeks.map(w => (
+            <div key={w.week} style={{background:"#fdfafa",border:"1px solid #f0dede",borderRadius:12,padding:"12px 14px",marginBottom:10}}>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:"var(--g)",fontWeight:900,letterSpacing:"0.03em",marginBottom:6}}>
+                Week {w.week} <span style={{fontFamily:"'Lato',sans-serif",fontSize:11,color:"var(--muted)",fontWeight:700}}>· {w.dates}</span>
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                {w.approved.map((item, idx) => (
+                  <span key={`a-${idx}`} style={{background:"white",border:"1px solid #d7ead7",borderRadius:999,padding:"5px 9px",fontSize:12,fontWeight:800,color:"var(--dark)"}}>
+                    ✅ {item}
+                  </span>
+                ))}
+                {w.pending.map((item, idx) => (
+                  <span key={`p-${idx}`} style={{background:"#fff3e0",border:"1px solid #ffd6a6",borderRadius:999,padding:"5px 9px",fontSize:12,fontWeight:800,color:"#e65100"}}>
+                    🟠 {item}
+                  </span>
+                ))}
+                {w.returned.map((item, idx) => (
+                  <span key={`r-${idx}`} style={{background:"#ffebee",border:"1px solid #ffcdd2",borderRadius:999,padding:"5px 9px",fontSize:12,fontWeight:800,color:"#c62828"}}>
+                    ↺ {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 function computeStreak(checks) {
   let streak = 0;
@@ -269,8 +463,8 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .wk-hero-hd h2{font-family:'Barlow Condensed',sans-serif;font-size:28px;letter-spacing:0.02em}
 .wk-hero-hd .sport-badge{font-size:13px;font-weight:700;margin-top:4px}
 .wk-hero-hd .wk-dates{font-size:12px;opacity:0.65;margin-top:2px}
-.runs-chips{display:flex;flex-wrap:nowrap;gap:6px;margin-top:10px;justify-content:center;width:100%}
-.run-chip{font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;background:rgba(0,0,0,0.08);cursor:pointer;transition:all 0.15s;border:2px solid transparent;flex:1;text-align:center;white-space:nowrap;min-width:0}
+.runs-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;width:100%}
+.run-chip{font-size:12px;font-weight:800;padding:8px 10px;border-radius:18px;background:rgba(0,0,0,0.08);cursor:pointer;transition:all 0.15s;border:2px solid transparent;flex:1 1 calc(33.333% - 6px);text-align:center;white-space:normal;min-width:88px;min-height:46px;display:flex;align-items:center;justify-content:center;line-height:1.2;overflow-wrap:anywhere;word-break:normal}
 .run-chip.done{background:var(--g);color:white;border-color:var(--g)}
 .run-chip:hover:not(.done){background:rgba(0,0,0,0.14)}
 .prog-bar-bg{height:6px;background:#f0dede;border-radius:3px;overflow:hidden;margin:12px 18px 4px}
@@ -392,17 +586,17 @@ function TCReacceptModal({ userEmail, onAccepted }) {
   async function handleAccept() {
     if (!ticked) return;
     setSaving(true);
-    try { localStorage.setItem(`tcVersion:${APP_SQUAD}`, "v2"); } catch(e) {}
+    try { localStorage.setItem(`tcVersion:${APP_SQUAD}`, CURRENT_TERMS_VERSION); } catch(e) {}
     try {
       await sb.from("audit_log").insert({
         user_email: userEmail,
         player_id: null,
         player_name: null,
         action: "tc_agreed_at_signup",
-        detail: "User agreed to updated Terms & Conditions (v2 — includes WhatsApp, photography, coaching group disclaimer)",
+        detail: `User agreed to Terms & Conditions (${CURRENT_TERMS_VERSION})`,
         squad: APP_SQUAD,
         old_value: null,
-        new_value: new Date().toISOString(),
+        new_value: CURRENT_TERMS_VERSION,
       });
     } catch(e) {}
     setSaving(false);
@@ -419,10 +613,10 @@ function TCReacceptModal({ userEmail, onAccepted }) {
           <div style={{fontSize:36,marginBottom:8}}>📋</div>
           <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,
                        color:"var(--g)",letterSpacing:"0.02em",marginBottom:4}}>
-            UPDATED TERMS & CONDITIONS
+            TERMS & CONDITIONS
           </div>
           <p style={{fontSize:13,color:"var(--muted)",lineHeight:1.5}}>
-            We've updated our terms before the challenge kicks off. Please read and agree to continue.
+            Please read and agree once to continue. You will only be asked again if these terms materially change.
           </p>
         </div>
 
@@ -470,6 +664,7 @@ function TCReacceptModal({ userEmail, onAccepted }) {
 }
 
 
+
 function makeChildAccessToken() {
   try {
     const bytes = new Uint8Array(16);
@@ -480,29 +675,13 @@ function makeChildAccessToken() {
   }
 }
 
-function ChildVersionBox({ player, showToast }) {
+function ChildVersionComingSoon({ player, showToast }) {
   const [token, setToken] = useState(player?.child_access_token || "");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setToken(player?.child_access_token || "");
   }, [player?.id, player?.child_access_token]);
-
-  async function getOrCreateToken() {
-    if (!player?.id) return "";
-    if (token) return token;
-
-    const nextToken = makeChildAccessToken();
-    const { error } = await sb
-      .from("players")
-      .update({ child_access_token: nextToken })
-      .eq("id", player.id)
-      .eq("squad", APP_SQUAD);
-
-    if (error) throw error;
-    setToken(nextToken);
-    return nextToken;
-  }
 
   async function copyChildLink() {
     if (!player?.id) {
@@ -513,7 +692,21 @@ function ChildVersionBox({ player, showToast }) {
     setBusy(true);
 
     try {
-      const nextToken = await getOrCreateToken();
+      let nextToken = token;
+
+      if (!nextToken) {
+        nextToken = makeChildAccessToken();
+
+        const { error } = await sb
+          .from("players")
+          .update({ child_access_token: nextToken })
+          .eq("id", player.id)
+          .eq("squad", APP_SQUAD);
+
+        if (error) throw error;
+        setToken(nextToken);
+      }
+
       const link = `${window.location.origin}${window.location.pathname}?child=${nextToken}`;
       await navigator.clipboard.writeText(link);
       showToast("Child app link copied!");
@@ -525,34 +718,8 @@ function ChildVersionBox({ player, showToast }) {
     setBusy(false);
   }
 
-  async function shareChildLink() {
-    if (!player?.id) {
-      showToast("Select a player first.");
-      return;
-    }
-
-    setBusy(true);
-
-    try {
-      const nextToken = await getOrCreateToken();
-      const link = `${window.location.origin}${window.location.pathname}?child=${nextToken}`;
-
-      if (navigator.share) {
-        await navigator.share({
-          title: "Fingallians Child App",
-          text: `${player?.name || "Player"}'s child-friendly challenge view`,
-          url: link
-        });
-      } else {
-        await navigator.clipboard.writeText(link);
-        showToast("Child app link copied!");
-      }
-    } catch (e) {
-      console.error("Child share error:", e);
-      showToast("Could not share the child link. Use Copy Link instead.");
-    }
-
-    setBusy(false);
+  function shareComingSoon() {
+    showToast("Share button coming soon. Use Copy Link for now.");
   }
 
   return (
@@ -569,13 +736,14 @@ function ChildVersionBox({ player, showToast }) {
         <button className="btn btn-green" style={{fontSize:16}} onClick={copyChildLink} disabled={busy}>
           {busy ? "…" : "Copy Link"}
         </button>
-        <button className="btn btn-ghost" style={{fontSize:16}} onClick={shareChildLink} disabled={busy}>
+        <button className="btn btn-ghost" style={{fontSize:16}} onClick={shareComingSoon} disabled={busy}>
           Share
         </button>
       </div>
     </div>
   );
 }
+
 
 function ChildSimpleView({ player, checks, playerLoaded, pts, weeksDone, showToast, onToggle }) {
   const currentWeekIndex = Math.min(Math.max(Math.floor((new Date() - new Date("2026-06-29")) / (7*24*60*60*1000)), 0), 7);
@@ -653,6 +821,149 @@ function ChildSimpleView({ player, checks, playerLoaded, pts, weeksDone, showToa
 }
 
 
+function ProfileMenu({ session, player, isAdmin, isSuperAdmin, onSignOut, showToast }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const email = session?.user?.email || "";
+  const firstName = player?.name ? `${player.name.split(" ")[0]}\'s Parent` : (email.split("@")[0] || "Account");
+
+  async function getOrCreateChildLink() {
+    if (!player?.id) {
+      showToast("Select a player first.");
+      return null;
+    }
+
+    let nextToken = player.child_access_token;
+
+    if (!nextToken) {
+      nextToken = makeChildAccessToken();
+
+      const { error } = await sb
+        .from("players")
+        .update({ child_access_token: nextToken })
+        .eq("id", player.id)
+        .eq("squad", APP_SQUAD);
+
+      if (error) throw error;
+      player.child_access_token = nextToken;
+    }
+
+    return `${window.location.origin}${window.location.pathname}?child=${nextToken}`;
+  }
+
+  async function copyChildLink() {
+    setBusy(true);
+    try {
+      const link = await getOrCreateChildLink();
+      if (!link) return;
+      await navigator.clipboard.writeText(link);
+      showToast("Child app link copied!");
+      setOpen(false);
+    } catch (e) {
+      console.error("Child link error:", e);
+      showToast("Could not create the child link. Check Supabase setup and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function shareChildLink() {
+    setBusy(true);
+    try {
+      const link = await getOrCreateChildLink();
+      if (!link) return;
+
+      if (navigator.share) {
+        await navigator.share({
+          title: "Fingallians Child App",
+          text: `${player?.name || "Player"}'s child-friendly challenge view`,
+          url: link
+        });
+      } else {
+        await navigator.clipboard.writeText(link);
+        showToast("Child app link copied!");
+      }
+
+      setOpen(false);
+    } catch (e) {
+      console.error("Child share error:", e);
+      showToast("Could not share the child link. Use Copy Link instead.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{position:"relative",marginLeft:"auto"}}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-label="Open account menu"
+        style={{
+          width:38,height:38,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.28)",
+          background:"rgba(255,255,255,0.12)",color:"#fff",display:"flex",alignItems:"center",
+          justifyContent:"center",fontSize:18,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.18)"
+        }}
+      >
+        👤
+      </button>
+
+      {open && (
+        <div style={{
+          position:"absolute",right:0,top:46,width:240,background:"white",borderRadius:14,
+          boxShadow:"0 12px 34px rgba(0,0,0,0.22)",zIndex:10050,overflow:"hidden",
+          border:"1px solid #f0dede",color:"var(--dark)"
+        }}>
+          <div style={{padding:"13px 14px",background:"#faf7f7",borderBottom:"1px solid #f0dede"}}>
+            <div style={{fontWeight:900,fontSize:14}}>{firstName}</div>
+            <div style={{fontSize:11,color:"var(--muted)",wordBreak:"break-word",marginTop:2}}>{email}</div>
+            <div style={{fontSize:11,color:"var(--g)",fontWeight:800,marginTop:4}}>
+              {isSuperAdmin ? "Super Admin" : isAdmin ? "Admin" : "Parent"}
+            </div>
+          </div>
+
+          {player && (
+            <>
+              <button
+                onClick={copyChildLink}
+                disabled={busy}
+                style={{
+                  width:"100%",border:"none",background:"white",padding:"12px 14px",
+                  textAlign:"left",fontSize:14,fontWeight:900,color:"var(--g)",cursor:"pointer",
+                  fontFamily:"inherit",borderBottom:"1px solid #f5eeee"
+                }}
+              >
+                {busy ? "…" : "📱 Copy Child App Link"}
+              </button>
+              <button
+                onClick={shareChildLink}
+                disabled={busy}
+                style={{
+                  width:"100%",border:"none",background:"white",padding:"12px 14px",
+                  textAlign:"left",fontSize:14,fontWeight:900,color:"var(--g)",cursor:"pointer",
+                  fontFamily:"inherit",borderBottom:"1px solid #f5eeee"
+                }}
+              >
+                📤 Share Child App
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={onSignOut}
+            style={{
+              width:"100%",border:"none",background:"white",padding:"13px 14px",
+              textAlign:"left",fontSize:14,fontWeight:900,color:"#a31621",cursor:"pointer",
+              fontFamily:"inherit"
+            }}
+          >
+            🚪 Sign Out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const childToken = new URLSearchParams(window.location.search).get("child");
   const isChildView = !!childToken;
@@ -665,13 +976,19 @@ export default function App() {
   const [allPlayers, setAllPlayers] = useState([]);
   const [playerLoaded, setPlayerLoaded] = useState(false);
   const [confettiTrigger, setConfettiTrigger] = useState(0);
-  const [waConsent, setWaConsent] = useState(() => { try { return localStorage.getItem(`waConsent:${APP_SQUAD}:v2`) === "true"; } catch { return false; } });
-  const [tcAccepted, setTcAccepted] = useState(() => { try { return localStorage.getItem(`tcVersion:${APP_SQUAD}`) === "v2"; } catch { return false; } });
+  const [waConsent, setWaConsent] = useState(() => { try { return localStorage.getItem(`waConsent:${APP_SQUAD}`) === "true"; } catch { return false; } });
+  const [tcAccepted, setTcAccepted] = useState(() => { try { return localStorage.getItem(`tcVersion:${APP_SQUAD}`) === CURRENT_TERMS_VERSION; } catch { return false; } });
 
   const showToast = useCallback((msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2800);
   }, []);
+
+  async function handleSignOut() {
+    try { await sb.auth.signOut(); } catch (_) {}
+    try { sessionStorage.clear(); } catch (_) {}
+    window.location.href = window.location.pathname;
+  }
 
   useEffect(() => {
     if (isChildView) {
@@ -685,6 +1002,32 @@ export default function App() {
     const { data: { subscription } } = sb.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, [isChildView]);
+
+  useEffect(() => {
+    async function checkTermsAccepted() {
+      if (!session?.user?.email || isChildView || tcAccepted) return;
+
+      try {
+        const { data } = await sb
+          .from("audit_log")
+          .select("id")
+          .eq("user_email", session.user.email)
+          .eq("squad", APP_SQUAD)
+          .eq("action", "tc_agreed_at_signup")
+          .or(`new_value.eq.${CURRENT_TERMS_VERSION},detail.ilike.%${CURRENT_TERMS_VERSION}%`)
+          .limit(1);
+
+        if ((data || []).length > 0) {
+          try { localStorage.setItem(`tcVersion:${APP_SQUAD}`, CURRENT_TERMS_VERSION); } catch (_) {}
+          setTcAccepted(true);
+        }
+      } catch (e) {
+        // If the audit lookup fails, fall back to the local-device check.
+      }
+    }
+
+    checkTermsAccepted();
+  }, [session?.user?.email, isChildView, tcAccepted]);
 
   useEffect(() => {
     async function loadChildView() {
@@ -708,13 +1051,27 @@ export default function App() {
 
       setPlayer(data);
 
+      // Record child app usage. This is deliberately separate from task completion.
+      // It lets the admin dashboard count Generated / Opened / Active this week later.
+      try {
+        const { error: openError } = await sb.rpc("child_record_open", {
+          p_child_access_token: childToken,
+          p_squad: APP_SQUAD
+        });
+        if (openError) console.error("Child open tracking failed", openError);
+      } catch (e) {
+        console.error("Child open tracking failed", e);
+      }
+
       const { data: comps } = await sb
         .from("task_completions")
-        .select("task_key")
+        .select("task_key,status")
         .eq("player_id", data.id);
 
       const c = {};
-      [...new Set((comps || []).map(r => r.task_key))].forEach(k => { c[k] = true; });
+      (comps || []).forEach(r => {
+        c[r.task_key] = r.status || "approved";
+      });
       setChecks(c);
       setPlayerLoaded(true);
     }
@@ -749,11 +1106,13 @@ export default function App() {
           setPlayer(playerData);
           const { data: comps } = await sb
             .from("task_completions")
-            .select("task_key")
+            .select("task_key,status")
             .eq("player_id", playerData.id);
           const c = {};
           // One child = one activity state, even if multiple parent emails are linked.
-          [...new Set((comps || []).map(r => r.task_key))].forEach(k => { c[k] = true; });
+          (comps || []).forEach(r => {
+            c[r.task_key] = r.status || "approved";
+          });
           setChecks(c);
         }
       }
@@ -766,7 +1125,7 @@ export default function App() {
   async function loadAllPlayers() {
     const { data } = await sb
       .from("players")
-      .select("id,name,squad")
+      .select("id,name,squad,child_access_token,child_first_opened_at,child_last_seen_at")
       .eq("squad", APP_SQUAD)
       .order("name");
     setAllPlayers(data || []);
@@ -774,6 +1133,8 @@ export default function App() {
 
   async function toggleTask(taskKey, pts, label) {
     if (!player) return;
+
+    const isSquadSession = /^w\d+-squad$/.test(taskKey);
 
     const weekMatch = taskKey.match(/^w(\d+)-/);
     if (weekMatch && !isChildView && session?.user?.email !== SUPER_ADMIN_EMAIL) {
@@ -787,10 +1148,38 @@ export default function App() {
       }
     }
 
-    const done = checks[taskKey];
-    const nextComplete = !done;
+    const currentState = checks[taskKey];
+    const done = isApproved(currentState) || isPending(currentState);
+    const returned = isRejected(currentState);
+    const nextComplete = returned ? true : !done;
 
     if (isChildView) {
+      if (isSquadSession) {
+        const { error } = await sb.rpc("child_submit_task_completion", {
+          p_child_access_token: childToken,
+          p_task_key: taskKey,
+          p_complete: nextComplete,
+          p_status: nextComplete ? "pending" : "rejected"
+        });
+
+        if (error) {
+          console.error("Child squad submission failed", error);
+          showToast("❌ Could not submit that squad session — please try again.");
+          return;
+        }
+
+        if (nextComplete) {
+          setChecks(c => ({ ...c, [taskKey]: "pending" }));
+          showToast("🏅 Squad Session submitted! Ask a parent to share proof in WhatsApp. Points appear once approved.");
+          logAudit("Child Version", player, "bonus_pending", `${label} submitted for approval from child app`, null, "pending");
+        } else {
+          setChecks(c => { const n={...c}; delete n[taskKey]; return n; });
+          showToast("↩️ Squad Session submission removed");
+          logAudit("Child Version", player, "bonus_removed", `${label} pending submission removed from child app`);
+        }
+        return;
+      }
+
       const { error } = await sb.rpc("child_set_task_completion", {
         p_child_access_token: childToken,
         p_task_key: taskKey,
@@ -804,7 +1193,7 @@ export default function App() {
       }
 
       if (nextComplete) {
-        setChecks(c => ({ ...c, [taskKey]: true }));
+        setChecks(c => ({ ...c, [taskKey]: "approved" }));
         setConfettiTrigger(t => t + 1);
         showToast(`✅ ${label} logged! +${pts} pts`);
       } else {
@@ -829,17 +1218,19 @@ export default function App() {
         .eq("player_id", player.id)
         .eq("task_key", taskKey);
       setChecks(c => { const n={...c}; delete n[taskKey]; return n; });
-      logAudit(session.user.email, player, "task_incomplete", label);
+      logAudit(session.user.email, player, isSquadSession ? "bonus_removed" : "task_incomplete", label);
     } else {
       await sb.from("task_completions")
         .delete()
         .eq("player_id", player.id)
         .eq("task_key", taskKey);
 
+      const nextStatus = isSquadSession ? "pending" : "approved";
       const { error: insertError } = await sb.from("task_completions").insert({
         player_id: player.id,
         task_key: taskKey,
-        completed_at: new Date().toISOString()
+        completed_at: new Date().toISOString(),
+        status: nextStatus
       });
 
       if (insertError) {
@@ -848,11 +1239,16 @@ export default function App() {
         return;
       }
 
-      const newChecks = { ...checks, [taskKey]: true };
-      setChecks(newChecks);
-      setConfettiTrigger(t => t + 1);
-      showToast(`✅ ${label} logged! +${pts} pts`);
-      logAudit(session.user.email, player, "task_complete", label, null, `+${pts} pts`);
+      setChecks(c => ({ ...c, [taskKey]: nextStatus }));
+
+      if (isSquadSession) {
+        showToast("🏅 Squad Session submitted! Ask a parent to share proof in WhatsApp. Points appear once approved.");
+        logAudit(session.user.email, player, "bonus_pending", `${label} submitted for approval`, null, "pending");
+      } else {
+        setConfettiTrigger(t => t + 1);
+        showToast(`✅ ${label} logged! +${pts} pts`);
+        logAudit(session.user.email, player, "task_complete", label, null, `+${pts} pts`);
+      }
     }
   }
   async function linkPlayer(playerId) {
@@ -899,7 +1295,6 @@ export default function App() {
     { id:"home",    label:"Home"     },
     { id:"plan",    label:"Plan"     },
     { id:"progress",label:"Progress" },
-    ...(isSuperAdmin ? [{ id:"admin",   label:"Admin"   }] : []),
     ...(isSuperAdmin ? [{ id:"dashboard", label:"Dashboard" }] : []),
   ];
 
@@ -911,11 +1306,19 @@ export default function App() {
           <div className="hdr">
             <div className="hdr-row">
               <div className="crest"><img src={LOGO} alt="Fingallians GAA crest" /></div>
-              <div>
+              <div style={{minWidth:0}}>
                 <div className="hdr-title">FINGALLIANS GAA</div>
                 <div className="hdr-sub">Fingallians 2017 Boys · Summer Challenge 2026</div>
                 {player && <div className="hdr-player">👤 {player.name} · {pts} pts</div>}
               </div>
+              <ProfileMenu
+                session={session}
+                player={player}
+                isAdmin={isAdmin}
+                isSuperAdmin={isSuperAdmin}
+                onSignOut={handleSignOut}
+                showToast={showToast}
+              />
             </div>
             <div className="tabs">
               {TABS.map(t => (
@@ -944,15 +1347,11 @@ export default function App() {
         )}
 
         {session && (player || isAdmin) && tab === "progress" && (
-          <ProgressTab player={player} checks={checks} isAdmin={isAdmin} />
-        )}
-
-        {session && isAdmin && tab === "admin" && (
-          <AdminTab allPlayers={allPlayers} session={session} onRefresh={loadAllPlayers} showToast={showToast} />
+          <ProgressTab player={player} checks={checks} isAdmin={isAdmin} allPlayers={allPlayers} />
         )}
 
         {session && isSuperAdmin && tab === "dashboard" && (
-          <DashboardTab allPlayers={allPlayers} />
+          <DashboardTab allPlayers={allPlayers} onRefresh={loadAllPlayers} showToast={showToast} />
         )}
       </div>
       {toast && <div className="toast">{toast}</div>}
@@ -988,7 +1387,7 @@ function AuthScreen({ showToast }) {
   }
 
 
-  const redirectUrl = "https://fingallians-boys-2017.vercel.app";
+  const redirectUrl = "https://fingallians-app.vercel.app";
 
   async function submit() {
     setErr(""); setBusy(true);
@@ -997,7 +1396,7 @@ function AuthScreen({ showToast }) {
       if (pw.length < 6) { setErr("Password must be at least 6 characters long"); setBusy(false); return; }
       if (!tcAgreed) { setErr("Please agree to the Terms & Conditions to continue"); setBusy(false); return; }
       const { error } = await sb.auth.signUp({ email, password: pw,
-        options: { emailRedirectTo: "https://fingallians-boys-2017.vercel.app" }
+        options: { emailRedirectTo: "https://fingallians-app.vercel.app" }
       });
       if (error) { setErr(error.message); setBusy(false); return; }
       setSignedUpEmail(email);
@@ -1104,7 +1503,7 @@ function AuthScreen({ showToast }) {
                 </div>
                 <div className="tc-section">
                   <strong>Data & Privacy</strong>
-                  <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2017boys@gmail.com</strong>.</p>
+                  <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2014boys@gmail.com</strong>.</p>
                 </div>
                 <div className="tc-section">
                   <strong>Participation</strong>
@@ -1206,9 +1605,6 @@ function LinkPlayerScreen({ onLink }) {
             )
           )}
         </div>
-      </div>
-      <div style={{textAlign:"center",marginTop:8}}>
-        <button className="link-btn" onClick={async()=>{ await sb.auth.signOut(); window.location.href = window.location.pathname; }}>Sign out</button>
       </div>
     </div>
   );
@@ -1375,12 +1771,16 @@ function WAConsentButton({ waConsent, setWaConsent, player, userEmail }) {
     }
   }
 
-  async function handleClick() {
+  async function openWhatsAppAfterLogging() {
+    setSaving(true);
+    await recordWhatsAppConsent();
+    setSaving(false);
+    window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
+  }
+
+  function handleClick() {
     if (waConsent) {
-      setSaving(true);
-      await recordWhatsAppConsent();
-      setSaving(false);
-      window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
+      openWhatsAppAfterLogging();
     } else {
       setTicked(false);
       setShowModal(true);
@@ -1390,16 +1790,10 @@ function WAConsentButton({ waConsent, setWaConsent, player, userEmail }) {
   async function handleConfirm() {
     if (!ticked || saving) return;
 
-    setSaving(true);
-    try {
-      localStorage.setItem(`waConsent:${APP_SQUAD}:v2`, "true");
-    } catch(e) {}
-
-    await recordWhatsAppConsent();
+    try { localStorage.setItem(`waConsent:${APP_SQUAD}`, "true"); } catch(e) {}
     setWaConsent(true);
-    setSaving(false);
     setShowModal(false);
-    window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
+    await openWhatsAppAfterLogging();
   }
 
   return (
@@ -1514,21 +1908,21 @@ function HomeTab({ player, checks, pts, weeksDone, onNav, onToggle, showToast, w
       <WeekDetail w={w} ps={ps} pct={pct} wPts={wPts} wMax={wMax} checks={checks} onToggle={onToggle} player={player} showToast={showToast} />
       <button className="btn btn-ghost" style={{marginTop:4}} onClick={onNav}>VIEW FULL 8-WEEK PLAN →</button>
 
-      <ChildVersionBox player={player} showToast={showToast} />
+      <ChildVersionComingSoon player={player} showToast={showToast} />
 
       {/* Share your skills */}
       <div style={{background:"linear-gradient(135deg,#7d1018 0%,var(--g) 100%)",borderRadius:"var(--radius)",padding:"16px 18px",marginTop:12,color:"white",textAlign:"center"}}>
-        <div style={{fontSize:24,marginBottom:6}}>📱🏑⚽</div>
+      <div style={{fontSize:24,marginBottom:6}}>📱🏑⚽</div>
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,letterSpacing:"0.02em",marginBottom:6}}>SHARE YOUR SKILLS!</div>
         <div style={{fontSize:13,opacity:0.85,lineHeight:1.6,marginBottom:14}}>
-          Filmed yourself practising? Send your videos and photos to the coaches on WhatsApp — we would love to see the lads putting in the work! And don't forget — send in proof of your squad session to claim your bonus points! 📸
+          Got a video or photo of your lad putting in the work? We'd love to see it! Send it on to the coaches in the WhatsApp group.
+
+Don't forget to send proof of any Squad Sessions too, so we can award those bonus points! ⭐
         </div>
         <WAConsentButton waConsent={waConsent} setWaConsent={setWaConsent} player={player} userEmail={userEmail} />
       </div>
 
-      <div style={{textAlign:"center",marginTop:14,paddingBottom:8}}>
-        <button className="link-btn" style={{color:"var(--muted)",fontSize:13}} onClick={async()=>{ await sb.auth.signOut(); window.location.href = window.location.pathname; }}>Sign out</button>
-      </div>
+
     </div>
   );
 }
@@ -1575,14 +1969,6 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
     ...((w.speed || []).map(s => ({ ytId: s.youtube_id, label: (s.label || "").replace(/^⚡\s*/, "") }))),
     ...((w.skills || []).map(s => ({ ytId: s.youtube_id, label: (s.label || "").replace(/^[🏑⚽]\s*/, "") }))),
   ].filter(v => v.ytId).slice(0, 3);
-  const runs = w.runs || [];
-  const speed = w.speed || [];
-  const skills = w.skills || [];
-  const squad = w.squad || {
-    label: "Squad Session",
-    desc: "Get a few lads together for a short, safe, fun skills session.",
-    youtube_id: null,
-  };
 
   return (
     <div>
@@ -1593,14 +1979,14 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
           <div className="sport-badge" style={{color:ps.accent}}>{SPORT_LABEL}</div>
           <div className="wk-dates" style={{color:ps.accent}}>{w.dates}</div>
           <div className="runs-chips">
-            {runs.map((r,i) => {
+            {w.runs.map((r,i) => {
               const k = runKey(w.week, i);
-              const done = !!checks[k];
+              const done = isApproved(checks[k]);
               return (
                 <div key={i} className={`run-chip${done?" done":""}`}
                   style={!done?{background:ps.chip,color:ps.accent,borderColor:"transparent"}:{}}
-                  onClick={()=>canToggle&&onToggle(k,PTS.run,`${r.label} (${r.distance})`)}>
-                  🏃 {r.label}: {r.distance} {done?"✓":""}
+                  onClick={()=>canToggle&&onToggle(k,PTS.run,`${r.icon || "🏃"} ${r.label} (${r.distance})`)}>
+                  {r.icon || "🏃"} {r.label}: {r.distance} {done?"✓":""}
                 </div>
               );
             })}
@@ -1614,9 +2000,9 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
       </div>
 
       {/* ── Speed Mechanics ── */}
-      {speed.map((s) => {
+      {w.speed.map((s) => {
         const k    = speedKey(w.week, s.id);
-        const done = !!checks[k];
+        const done = isApproved(checks[k]);
         const open = expandedSkill === s.id;
         return (
           <div key={s.id} className="skill-card" style={{borderLeft:"4px solid #7b1fa2"}}>
@@ -1654,9 +2040,9 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
       })}
 
       {/* ── Hurling & Football Skills ── */}
-      {skills.map((s) => {
+      {w.skills.map((s) => {
         const k    = skillKey(w.week, s.id);
-        const done = !!checks[k];
+        const done = isApproved(checks[k]);
         const open = expandedSkill === s.id;
         return (
           <div key={s.id} className="skill-card">
@@ -1693,30 +2079,39 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
 
       {(() => {
         const k    = squadKey(w.week);
-        const done = !!checks[k];
+        const state = checks[k];
+        const done = isApproved(state);
+        const pending = isPending(state);
+        const returned = isRejected(state);
         return (
           <div className="squad-card">
             <div className="squad-hd" onClick={()=>{
-              if(expandedSquad && !done) showToast("💪 Don't forget to tap 'Squad Session Done' if you have completed this!");
+              if(expandedSquad && !done && !pending && !returned) showToast("💪 Don't forget to submit your Squad Session if you completed this!");
               setExpandedSquad(v=>!v);
             }}>
-              <div className={`skill-check${done?" done":""}`} style={{flexShrink:0,cursor:"pointer"}}
+              <div className={`skill-check${done?" done":""}`} style={{flexShrink:0,cursor:"pointer",borderColor:pending?"#f5a623":returned?"#e65100":undefined,background:pending?"#fff3e0":returned?"#ffebee":undefined,color:pending?"#e65100":returned?"#c62828":undefined}}
                 onClick={e=>{e.stopPropagation();
-                  if(expandedSquad && !done) showToast("💪 Don't forget to tap 'Squad Session Done' if you have completed this!");
+                  if(expandedSquad && !done && !pending && !returned) showToast("💪 Don't forget to submit your Squad Session if you completed this!");
                   setExpandedSquad(v=>!v);
-                }}>{done?"✓":""}</div>
+                }}>{done?"✓":pending?"…":returned?"↺":""}</div>
               <div className="squad-icon">👥</div>
               <div className="squad-hd-text">
-                <div className="squad-type">Squad Session · +{PTS.squad} pts</div>
-                <div className="squad-name">{squad.label}</div>
+                <div className="squad-type">
+                  Squad Session · +{PTS.squad} pts {pending ? "· Awaiting approval" : returned ? "· Returned" : ""}
+                </div>
+                <div className="squad-name">{w.squad.label}</div>
               </div>
-              <div className="squad-pts">+{PTS.squad}</div>
+              <div className="squad-pts">{pending ? "Pending" : returned ? "Returned" : `+${PTS.squad}`}</div>
               <div style={{fontSize:18,color:"rgba(255,255,255,0.5)",transition:"transform 0.2s",transform:expandedSquad?"rotate(180deg)":"none"}}>⌄</div>
             </div>
             {expandedSquad && (
               <div className="squad-body">
-                <p className="squad-desc">{squad.desc}</p>
-                <div className="squad-cta">👥 Get 3–4 lads together — squad sessions earn extra points! Don’t forget to send photos or short videos of your squad session to the WhatsApp group to claim the bonus.</div>
+                <p className="squad-desc">{w.squad.desc}</p>                <div className="squad-cta">🏅 Completed your Squad Session? Ask a parent to send photo or video proof in WhatsApp. Points appear once approved.</div>
+                {returned && (
+                  <div style={{background:"#ffebee",border:"1px solid #ffcdd2",color:"#c62828",borderRadius:10,padding:"10px 12px",fontSize:13,fontWeight:800,marginBottom:12}}>
+                    ↺ Returned by admin — please check WhatsApp/proof and submit again.
+                  </div>
+                )}
                 {squadVideos.length > 0 && (
                   <div style={{display:"flex",gap:8,marginBottom:12}}>
                     {squadVideos.map((v, idx) => {
@@ -1756,8 +2151,8 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                 )}
 
                 {canToggle && (
-                  <button className={`squad-mark${done?" done":""}`} onClick={()=>onToggle(k,PTS.squad,squad.label)}>
-                    {done?"✕ MARK INCOMPLETE":"✓ SQUAD SESSION DONE"}
+                  <button className={`squad-mark${done?" done":""}`} onClick={()=>onToggle(k,PTS.squad,w.squad.label)}>
+                    {pending ? "AWAITING APPROVAL" : returned ? "↺ SUBMIT AGAIN" : done ? "✕ REMOVE" : "✓ SUBMIT FOR APPROVAL"}
                   </button>
                 )}
               </div>
@@ -1828,7 +2223,7 @@ function PlanTab({ checks, onToggle, player, showToast }) {
         </div>
         <div className="tc-section">
           <strong>Data & Privacy</strong>
-          <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2017boys@gmail.com</strong>.</p>
+          <p>To use this app we store your child's first and last name and your email address. No other personal information is collected or stored. Your data is not shared with any third party and is used solely to manage participation in the 2026 Summer Challenge. You can request deletion of your data at any time by emailing <strong>fingallians2014boys@gmail.com</strong>.</p>
         </div>
         <div className="tc-section">
           <strong>Participation</strong>
@@ -1894,7 +2289,93 @@ function ShareProgressButton({ player, checks }) {
   );
 }
 
-function ProgressTab({ player, checks, isAdmin }) {
+
+function AdminProgressSnapshot({ allPlayers }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const maxPossible = WEEKS.reduce((a,w)=>a+weekMaxPts(w),0);
+
+  useEffect(() => {
+    async function load() {
+      const ids = allPlayers.map(p => p.id);
+      if (!ids.length) { setRows([]); setLoading(false); return; }
+
+      const { data: comps } = await sb
+        .from("task_completions")
+        .select("player_id,task_key,status")
+        .in("player_id", ids);
+
+      const byPlayer = {};
+      ids.forEach(id => { byPlayer[id] = {}; });
+      (comps || []).forEach(r => {
+        if (byPlayer[r.player_id]) byPlayer[r.player_id][r.task_key] = r.status || "approved";
+      });
+
+      setRows(allPlayers.map(p => {
+        const c = byPlayer[p.id] || {};
+        let sessions = 0, minutes = 0, totalKm = 0;
+        WEEKS.forEach(w => {
+          w.runs.forEach((r,i) => {
+            if (isApproved(c[runKey(w.week,i)])) { sessions++; minutes += 20; if ((r.label || "").toLowerCase().includes("run")) totalKm += parseFloat(r.distance) || 0; }
+          });
+          w.skills.forEach(s => { if (isApproved(c[skillKey(w.week,s.id)])) { sessions++; minutes += 20; } });
+          w.speed.forEach(s => { if (isApproved(c[speedKey(w.week,s.id)])) { sessions++; minutes += 10; } });
+          // Squad Sessions are bonus approvals, not training sessions for the Sessions Logged / Minutes Active boxes.
+          // They still count for points via totalPts(c).
+          if (isApproved(c[squadKey(w.week)])) { /* bonus only */ }
+        });
+        return { ...p, checks:c, sessions, minutes, pts:totalPts(c), totalKm };
+      }).sort((a,b)=>b.pts-a.pts));
+
+      setLoading(false);
+    }
+    load();
+  }, [allPlayers]);
+
+  if (loading) return <div className="loader"><div className="spinner"/>Loading player progress…</div>;
+
+  return (
+    <div className="home-wrap">
+      <div style={{background:"linear-gradient(135deg,var(--g),#4a0a0e)",borderRadius:"var(--radius)",padding:"16px 18px",marginBottom:14,color:"#fff",position:"relative",overflow:"hidden"}}>
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,color:"var(--gold)",letterSpacing:"0.02em"}}>Squad Progress</div>
+        <div style={{fontSize:11,opacity:0.65,marginTop:2}}>Snapshot of all players · same key numbers parents see</div>
+      </div>
+
+      {rows.map(p => {
+        const pct = maxPossible ? Math.round((p.pts / maxPossible) * 100) : 0;
+        return (
+          <div key={p.id} style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede",marginBottom:10,width:"100%"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <div style={{width:34,height:34,borderRadius:"50%",background:"var(--g)",color:"var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,flexShrink:0}}>{p.name[0]}</div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:900,fontSize:14,color:"var(--dark)"}}>{p.name}</div>
+                <div style={{height:4,background:"#f0dede",borderRadius:2,marginTop:5,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${pct}%`,background:"var(--g)",borderRadius:2}}/>
+                </div>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+              {[
+                { label:"Sessions\\nLogged", value:p.sessions, suffix:"", icon:"✅", color:"var(--g)" },
+                { label:"Minutes\\nActive", value:p.minutes, suffix:" min", icon:"⏱", color:"#2e7d32" },
+                { label:"Total\\nPoints", value:p.pts, suffix:" pts", icon:"⭐", color:"#b8860b" },
+              ].map(s => (
+                <div key={s.label} style={{background:"#fdfafa",borderRadius:12,padding:"10px 6px",textAlign:"center",border:"1px solid #f0dede"}}>
+                  <div style={{fontSize:18}}>{s.icon}</div>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,color:s.color,lineHeight:1,marginTop:3}}>{s.value}{s.suffix}</div>
+                  <div style={{fontSize:9,color:"var(--muted)",whiteSpace:"pre-line",lineHeight:1.2,marginTop:3}}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProgressTab({ player, checks, isAdmin, allPlayers = [] }) {
+  if (isAdmin) return <AdminProgressSnapshot allPlayers={allPlayers} />;
   const [completions, setCompletions] = useState([]);
   const [loading, setLoading]         = useState(true);
 
@@ -1913,12 +2394,12 @@ function ProgressTab({ player, checks, isAdmin }) {
   const stats = useMemo(() => {
     let sessions = 0, minutes = 0, pts = 0;
     let totalKm = 0;
-    const runMins = 20, skillMins = 20, squadMins = 20;
+    const runMins = 20, skillMins = 20;
     WEEKS.forEach(w => {
       w.runs.forEach((r, i) => {
         if (checks[runKey(w.week, i)]) {
           sessions++; minutes += runMins; pts += PTS.run;
-          totalKm += parseFloat(r.distance) || 0;
+          if ((r.label || "").toLowerCase().includes("run")) totalKm += parseFloat(r.distance) || 0;
         }
       });
       w.skills.forEach(s => {
@@ -1927,7 +2408,9 @@ function ProgressTab({ player, checks, isAdmin }) {
       w.speed.forEach(s => {
         if (checks[speedKey(w.week, s.id)]) { sessions++; minutes += 10; pts += PTS.speed; }
       });
-      if (checks[squadKey(w.week)]) { sessions++; minutes += squadMins; pts += PTS.squad; }
+      // Squad Sessions are bonus approvals, not training sessions for the Sessions Logged / Minutes Active boxes.
+      // They still count for points.
+      if (isApproved(checks[squadKey(w.week)])) { pts += PTS.squad; }
     });
     return { sessions, minutes, pts, totalKm };
   }, [checks]);
@@ -1965,7 +2448,7 @@ function ProgressTab({ player, checks, isAdmin }) {
         ? new Date(c.completed_at).toLocaleDateString("en-IE", { day:"numeric", month:"short", year:"numeric" })
         : null;
       return { label, type, week, date, key: k };
-    }).filter(a => a.label);
+    }).filter(a => a.label && a.type !== "squad");
   }, [completions]);
 
   const typeStyle = {
@@ -1992,7 +2475,7 @@ function ProgressTab({ player, checks, isAdmin }) {
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,color:"var(--gold)",letterSpacing:"0.02em"}}>
           {player.name.split(" ")[0]}'s Progress
         </div>
-        <div style={{fontSize:11,opacity:0.65,marginTop:2}}>Fingallians 2017 Boys · Summer Challenge 2026</div>
+        <div style={{fontSize:11,opacity:0.65,marginTop:2}}>Fingallians 2014 · Summer Challenge 2026</div>
         {isAdmin && (
           <div style={{fontSize:10,marginTop:4,background:"rgba(255,255,255,.12)",display:"inline-block",padding:"2px 8px",borderRadius:10,color:"rgba(255,255,255,.75)"}}>
             👁 Viewing as admin
@@ -2019,7 +2502,7 @@ function ProgressTab({ player, checks, isAdmin }) {
       <div style={{background:"white",borderRadius:14,padding:"14px",marginBottom:14,border:"1px solid #f0dede",width:"100%"}}>
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:12}}>WEEKLY ACTIVITY</div>
         <div style={{display:"flex",gap:12,marginBottom:10,flexWrap:"wrap"}}>
-          {[["var(--g)","Runs"],["#2e7d32","Skills"],["#7b1fa2","Speed"],["#c45e00","Squad"]].map(([c,l]) => (
+          {[["var(--g)","Runs"],["#2e7d32","Skills"],["#7b1fa2","Speed"]].map(([c,l]) => (
             <div key={l} style={{display:"flex",alignItems:"center",gap:4}}>
               <div style={{width:10,height:10,borderRadius:2,background:c,flexShrink:0}}/>
               <span style={{fontSize:10,color:"var(--muted)"}}>{l}</span>
@@ -2119,6 +2602,7 @@ function CoachesTab({ allPlayers, coachEmail, showToast }) {
 function ScoresTab() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -2126,15 +2610,18 @@ function ScoresTab() {
         .from("players")
         .select("id,name,squad")
         .eq("squad", APP_SQUAD);
-      const { data: comps }   = await sb.from("task_completions").select("player_id,task_key");
+      const { data: comps }   = await sb.from("task_completions").select("player_id,task_key,status");
       if (!players) return;
       const statsMap = {};
       comps?.forEach(r => {
         if (!statsMap[r.player_id]) statsMap[r.player_id] = {};
-        statsMap[r.player_id][r.task_key] = true;
+        statsMap[r.player_id][r.task_key] = r.status || "approved";
       });
       const rows = players.map(p => ({
-        id: p.id, name: p.name, pts: totalPts(statsMap[p.id] || {}),
+        id: p.id,
+        name: p.name,
+        pts: totalPts(statsMap[p.id] || {}),
+        checks: statsMap[p.id] || {},
       })).sort((a,b) => b.pts - a.pts);
       setLeaderboard(rows);
       setLoading(false);
@@ -2145,13 +2632,30 @@ function ScoresTab() {
   const rankEmoji = (i) => i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i+1}`;
   const maxPossible = WEEKS.reduce((a,w) => a + weekMaxPts(w), 0);
 
+  function completedByWeek(checks) {
+    return WEEKS.map(w => {
+      const items = [];
+      w.runs.forEach((r,i) => {
+        if (isApproved(checks[runKey(w.week,i)])) items.push(`${r.label} (${r.distance})`);
+      });
+      w.speed.forEach(s => {
+        if (isApproved(checks[speedKey(w.week,s.id)])) items.push((s.label || "").replace(/^⚡\s*/, ""));
+      });
+      w.skills.forEach(s => {
+        if (isApproved(checks[skillKey(w.week,s.id)])) items.push((s.label || "").replace(/^[🏑⚽]\s*/, ""));
+      });
+      if (isApproved(checks[squadKey(w.week)])) items.push("Squad Session");
+      return { week: w.week, dates: w.dates, items };
+    }).filter(w => w.items.length > 0);
+  }
+
   return (
     <div>
       <div style={{background:"linear-gradient(135deg,var(--g) 0%,#4a0a0e 100%)",borderRadius:"var(--radius)",padding:"22px 20px",marginBottom:14,color:"white",textAlign:"center",position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",right:-10,bottom:-14,fontSize:100,opacity:0.07,pointerEvents:"none"}}>🏆</div>
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:36,letterSpacing:"0.02em",color:"var(--gold)"}}>LEADERBOARD</div>
         <div style={{fontSize:12,opacity:0.75,marginTop:4}}>Fingallians 2017 Boys · Summer Challenge 2026</div>
-        <div style={{fontSize:11,opacity:0.6,marginTop:4}}>Updates live as sessions are logged</div>
+        <div style={{fontSize:11,opacity:0.6,marginTop:4}}>Updates live as sessions are logged · tap a name to view completed activities</div>
       </div>
       {loading ? (
         <div className="loader"><div className="spinner"/>Loading scores…</div>
@@ -2160,7 +2664,7 @@ function ScoresTab() {
       ) : leaderboard.map((p, i) => {
         const pct = Math.round((p.pts / maxPossible) * 100);
         return (
-          <div key={p.id} style={{display:"flex",alignItems:"center",gap:12,background:"white",border:"2px solid transparent",borderRadius:14,padding:"12px 14px",marginBottom:8,boxShadow:"0 2px 10px rgba(163,22,33,0.08)"}}>
+          <div key={p.id} onClick={()=>setSelectedPlayer(p)} style={{display:"flex",alignItems:"center",gap:12,background:"white",border:"2px solid transparent",borderRadius:14,padding:"12px 14px",marginBottom:8,boxShadow:"0 2px 10px rgba(163,22,33,0.08)",cursor:"pointer"}}>
             <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,width:32,textAlign:"center",flexShrink:0}}>{rankEmoji(i)}</div>
             <div style={{width:36,height:36,borderRadius:"50%",background:"var(--g)",color:"var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,flexShrink:0}}>{p.name[0]}</div>
             <div style={{flex:1}}>
@@ -2175,6 +2679,16 @@ function ScoresTab() {
           </div>
         );
       })}
+
+      {selectedPlayer && (
+        <PlayerActivityModal
+          player={selectedPlayer}
+          checks={selectedPlayer.checks || {}}
+          points={selectedPlayer.pts || 0}
+          maxPossible={maxPossible}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </div>
   );
 }
@@ -2681,7 +3195,7 @@ function ConsentLog() {
   const [loading, setLoading] = useState(true);
 
   const tcActions = ["tc_agreed_at_signup", "tc_reaccepted"];
-  const waActions = ["wa_consent_given", "whatsapp_consent", "whatsapp_consent_given", "wa_joined"];
+  const waActions = ["wa_consent_given", "whatsapp_consent", "whatsapp_consent_given", "wa_joined", "wa_consent", "whatsapp_joined", "whatsapp_group_joined", "whatsapp_invite_clicked"];
 
   useEffect(() => {
     async function loadConsentLog() {
@@ -2699,8 +3213,7 @@ function ConsentLog() {
         console.error("Consent log load failed", error);
         setRecords([]);
       } else {
-        const filtered = (data || []).filter(r => !r.squad || r.squad === APP_SQUAD);
-        setRecords(filtered);
+        setRecords(data || []);
       }
 
       setLoading(false);
@@ -2796,34 +3309,54 @@ function ConsentLog() {
   );
 }
 
-function DashboardTab({ allPlayers }) {
+function DashboardTab({ allPlayers, onRefresh, showToast }) {
   const [stats,      setStats]      = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [recentLog,  setRecentLog]  = useState([]);
   const [claimedIds, setClaimedIds] = useState(new Set());
   const [ptsMap,     setPtsMap]     = useState({});
   const [weeklyMap,  setWeeklyMap]  = useState({});
+  const [playerChecksMap, setPlayerChecksMap] = useState({});
   const [activeView, setActiveView] = useState("overview");
+  const [childListView, setChildListView] = useState(null);
+  const [pendingBonus, setPendingBonus] = useState([]);
+  const [selectedLeaderboardPlayer, setSelectedLeaderboardPlayer] = useState(null);
+  const [newPlayerName, setNewPlayerName] = useState("");
+  const [addingPlayer, setAddingPlayer] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [removeConfirmName, setRemoveConfirmName] = useState("");
 
   useEffect(() => {
     if (!allPlayers.length) return;
     const ids = allPlayers.map(p => p.id);
     Promise.all([
-      sb.from("task_completions").select("player_id,task_key,completed_at").in("player_id", ids),
+      sb.from("task_completions").select("player_id,task_key,completed_at,status").in("player_id", ids),
       sb.from("parent_players").select("player_id").in("player_id", ids),
       sb.from("audit_log").select("user_email,player_name,action,detail,created_at,squad").or(`squad.eq.${APP_SQUAD},squad.is.null`).order("created_at",{ascending:false}).limit(100),
       sb.from("fitness_tests").select("player_id,period,lap_time").in("player_id", ids),
     ]).then(([{data:comps},{data:links},{data:logs},{data:fitness}]) => {
       const byPlayer = {};
       ids.forEach(id => { byPlayer[id] = {}; });
-      comps?.forEach(r => { if(byPlayer[r.player_id]) byPlayer[r.player_id][r.task_key]=true; });
+      comps?.forEach(r => { if(byPlayer[r.player_id]) byPlayer[r.player_id][r.task_key]=r.status || "approved"; });
       const pm = {};
       ids.forEach(id => { pm[id] = totalPts(byPlayer[id]); });
       setPtsMap(pm);
+      setPlayerChecksMap(byPlayer);
 
       const wm = {};
       ids.forEach(id => { wm[id] = {}; WEEKS.forEach(w => { wm[id][w.week] = weekPts(w, byPlayer[id]); }); });
       setWeeklyMap(wm);
+
+      const playersById = {};
+      allPlayers.forEach(p => { playersById[p.id] = p; });
+      setPendingBonus((comps || [])
+        .filter(r => r.status === "pending" && /^w\d+-squad$/.test(r.task_key))
+        .map(r => ({
+          ...r,
+          player_name: playersById[r.player_id]?.name || "Unknown player",
+          week: (r.task_key.match(/^w(\d+)-/) || [null, "?"])[1]
+        }))
+        .sort((a,b) => new Date(b.completed_at || 0) - new Date(a.completed_at || 0)));
 
       const registeredIds = new Set((links || []).map(l => l.player_id).filter(id => ids.includes(id)));
       setClaimedIds(registeredIds);
@@ -2837,8 +3370,13 @@ function DashboardTab({ allPlayers }) {
       const preTimes  = fitness?.filter(f=>f.period==="pre"  && f.lap_time).length || 0;
       const postTimes = fitness?.filter(f=>f.period==="post" && f.lap_time).length || 0;
 
+      const childGenerated = allPlayers.filter(p => !!p.child_access_token).length;
+      const childOpened = allPlayers.filter(p => !!p.child_first_opened_at).length;
+      const childActiveWeek = allPlayers.filter(p => p.child_last_seen_at && new Date(p.child_last_seen_at) > weekAgo).length;
+
       setStats({ totalSessions, playersActive, avgPts, thisWeekSessions, preTimes, postTimes,
-                 registered: registeredIds.size, total: ids.length });
+                 registered: registeredIds.size, total: ids.length,
+                 childGenerated, childOpened, childActiveWeek });
       setLoading(false);
     });
   }, [allPlayers]);
@@ -2868,6 +3406,152 @@ function DashboardTab({ allPlayers }) {
   };
 
   const maxPossible = WEEKS.reduce((a,w)=>a+weekMaxPts(w),0);
+
+  function dashboardCompletedByWeek(checks) {
+    return WEEKS.map(w => {
+      const items = [];
+      w.runs.forEach((r,i) => {
+        if (isApproved(checks[runKey(w.week,i)])) items.push(`${r.label} (${r.distance})`);
+      });
+      w.speed.forEach(s => {
+        if (isApproved(checks[speedKey(w.week,s.id)])) items.push((s.label || "").replace(/^⚡\s*/, ""));
+      });
+      w.skills.forEach(s => {
+        if (isApproved(checks[skillKey(w.week,s.id)])) items.push((s.label || "").replace(/^[🏑⚽]\s*/, ""));
+      });
+      if (isApproved(checks[squadKey(w.week)])) items.push("Squad Session");
+      return { week: w.week, dates: w.dates, items };
+    }).filter(w => w.items.length > 0);
+  }
+
+  const formatDublin = (ts) => {
+    if (!ts) return "Never";
+    return new Date(ts).toLocaleString("en-IE", {
+      timeZone: "Europe/Dublin",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  const childRows = useMemo(() => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return allPlayers
+      .filter(p => p.child_access_token)
+      .filter(p => {
+        if (childListView === "opened") return !!p.child_first_opened_at;
+        if (childListView === "active") return p.child_last_seen_at && new Date(p.child_last_seen_at) > weekAgo;
+        return true;
+      })
+      .sort((a,b) => new Date(b.child_last_seen_at || b.child_first_opened_at || 0) - new Date(a.child_last_seen_at || a.child_first_opened_at || 0));
+  }, [allPlayers, childListView]);
+
+  const childListTitle = childListView === "opened"
+    ? "Child apps opened"
+    : childListView === "active"
+      ? "Child apps active this week"
+      : "Generated child app links";
+
+  async function addDashboardPlayer() {
+    const name = newPlayerName.trim();
+    if (!name) return;
+    setAddingPlayer(true);
+    const { error } = await sb.from("players").insert({ name, squad: APP_SQUAD });
+    setAddingPlayer(false);
+
+    if (error) {
+      console.error("Add player failed", error);
+      showToast?.("❌ Could not add player");
+      return;
+    }
+
+    showToast?.(`✅ ${name} added`);
+    setNewPlayerName("");
+    onRefresh?.();
+  }
+
+  async function confirmRemoveDashboardPlayer() {
+    if (!removeTarget) return;
+    if (removeConfirmName.trim() !== removeTarget.name) {
+      showToast?.("Type the player's full name to confirm.");
+      return;
+    }
+
+    const { error } = await sb
+      .from("players")
+      .delete()
+      .eq("id", removeTarget.id)
+      .eq("squad", APP_SQUAD);
+
+    if (error) {
+      console.error("Remove player failed", error);
+      showToast?.("❌ Could not remove player");
+      return;
+    }
+
+    showToast?.(`🗑️ ${removeTarget.name} removed`);
+    setRemoveTarget(null);
+    setRemoveConfirmName("");
+    onRefresh?.();
+  }
+
+  async function reviewBonus(row, decision) {
+    const nextStatus = decision === "approved" ? "approved" : "rejected";
+
+    let error = null;
+
+    const rpcResult = await sb.rpc("admin_review_bonus_completion", {
+      p_player_id: row.player_id,
+      p_task_key: row.task_key,
+      p_status: nextStatus,
+      p_reviewed_by: SUPER_ADMIN_EMAIL
+    });
+
+    if (rpcResult.error) {
+      console.warn("Bonus review RPC failed, trying direct update", rpcResult.error);
+
+      const updateResult = await sb
+        .from("task_completions")
+        .update({
+          status: nextStatus,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: SUPER_ADMIN_EMAIL
+        })
+        .eq("player_id", row.player_id)
+        .eq("task_key", row.task_key);
+
+      error = updateResult.error;
+    }
+
+    if (error) {
+      console.error("Bonus review failed", error);
+      alert("Could not update bonus request. Please run the Supabase review-bonus SQL and try again.");
+      return;
+    }
+
+    const player = allPlayers.find(p => p.id === row.player_id);
+    await logAudit(
+      SUPER_ADMIN_EMAIL,
+      player,
+      decision === "approved" ? "bonus_approved" : "bonus_returned",
+      `Week ${row.week} Squad Session ${decision === "approved" ? "approved" : "returned"}`,
+      "pending",
+      nextStatus
+    );
+
+    setPendingBonus(list => list.filter(x => !(x.player_id === row.player_id && x.task_key === row.task_key)));
+
+    if (decision === "approved") {
+      setPtsMap(pm => ({ ...pm, [row.player_id]: (pm[row.player_id] || 0) + PTS.squad }));
+    }
+
+    alert(decision === "approved"
+      ? `+${PTS.squad} points awarded to ${row.player_name}`
+      : `${row.player_name}'s Squad Session was returned`);
+  }
 
   if (loading) return (
     <div className="admin-wrap">
@@ -2908,6 +3592,60 @@ function DashboardTab({ allPlayers }) {
           ))}
         </div>
 
+        <div style={{background:"linear-gradient(135deg,#e8f5e9,#ffffff)",border:"1px solid #c8e6c9",borderRadius:14,padding:"14px",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginBottom:10}}>
+            <div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:"var(--g)",letterSpacing:"0.04em",fontWeight:900}}>CHILD APPS</div>
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Private admin-only usage summary</div>
+            </div>
+            <div style={{fontSize:26}}>👧</div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+            {[
+              {label:"Generated",value:stats.childGenerated,sub:"links created",view:"generated"},
+              {label:"Opened",value:stats.childOpened,sub:"ever opened",view:"opened"},
+              {label:"Active 7d",value:stats.childActiveWeek,sub:"opened this week",view:"active"},
+            ].map(s=>(
+              <button key={s.label} onClick={()=>setChildListView(s.view)} style={{background:"white",borderRadius:12,padding:"10px 8px",textAlign:"center",border:"1px solid #e1f0e1",cursor:"pointer",fontFamily:"inherit"}}>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:30,color:"#2e7d32",lineHeight:1}}>{s.value}</div>
+                <div style={{fontSize:10,color:"#2e7d32",fontWeight:900,textTransform:"uppercase",letterSpacing:"0.06em",marginTop:4}}>{s.label}</div>
+                <div style={{fontSize:10,color:"var(--muted)",marginTop:2}}>{s.sub}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{background:"linear-gradient(135deg,#fff8e1,#ffffff)",border:"1px solid #ffe0a3",borderRadius:14,padding:"14px",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginBottom:10}}>
+            <div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:"#b8860b",letterSpacing:"0.04em",fontWeight:900}}>BONUS POINTS TO APPROVE</div>
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>
+                {pendingBonus.length} waiting · approve once proof is posted in WhatsApp
+              </div>
+            </div>
+            <div style={{fontSize:26}}>🏅</div>
+          </div>
+
+          {pendingBonus.length === 0 && (
+            <div style={{background:"white",borderRadius:12,padding:"12px",textAlign:"center",fontSize:13,color:"var(--muted)",border:"1px solid #fff0c2"}}>
+              No bonus requests waiting.
+            </div>
+          )}
+
+          {pendingBonus.length > 0 && pendingBonus.map(row => (
+            <div key={`${row.player_id}-${row.task_key}`} style={{background:"white",borderRadius:12,padding:"11px 12px",marginBottom:8,border:"1px solid #fff0c2",display:"grid",gridTemplateColumns:"1fr auto",gap:10,alignItems:"center"}}>
+              <div>
+                <div style={{fontSize:14,fontWeight:900,color:"var(--dark)"}}>{row.player_name}</div>
+                <div style={{fontSize:12,color:"var(--mid)",marginTop:2}}>Week {row.week} Squad Session · submitted {formatDublin(row.completed_at)}</div>
+              </div>
+              <div style={{display:"flex",gap:6}}>
+                <button onClick={()=>reviewBonus(row,"approved")} style={{background:"#2e7d32",color:"white",border:"none",borderRadius:10,padding:"8px 10px",fontWeight:900,cursor:"pointer",fontSize:12}}>Approve</button>
+                <button onClick={()=>reviewBonus(row,"returned")} style={{background:"#fff3e0",color:"#e65100",border:"1px solid #ffd6a6",borderRadius:10,padding:"8px 10px",fontWeight:900,cursor:"pointer",fontSize:12}}>Return</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <WAMessageGenerator allPlayers={allPlayers} ptsMap={ptsMap} />
         <div style={{display:"flex",justifyContent:"flex-end",marginBottom:10}}>
           <button onClick={() => downloadCSV(allPlayers, ptsMap, weeklyMap)}
@@ -2918,13 +3656,13 @@ function DashboardTab({ allPlayers }) {
           </button>
         </div>
         <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede",marginBottom:14}}>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:10}}>LEADERBOARD</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:4}}>LEADERBOARD</div><div style={{fontSize:11,color:"var(--muted)",marginBottom:10}}>Tap a player to view completed activities</div>
           {sortedPlayers.map((p,i)=>{
             const pts = ptsMap[p.id]||0;
             const pct = Math.round((pts/maxPossible)*100);
             const medals = ["🥇","🥈","🥉"];
             return (
-              <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,padding:"8px 10px",background:i%2===0?"#fdfafa":"white",borderRadius:10}}>
+              <div key={p.id} onClick={()=>setSelectedLeaderboardPlayer(p)} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,padding:"8px 10px",background:i%2===0?"#fdfafa":"white",borderRadius:10,cursor:"pointer"}}>
                 <div style={{width:24,textAlign:"center",fontSize:i<3?18:12,flexShrink:0,color:i<3?["#f5c842","#b0b0b0","#cd7f32"][i]:"var(--muted)",fontWeight:900}}>{i<3?medals[i]:i+1}</div>
                 <div style={{width:32,height:32,borderRadius:"50%",background:"var(--g)",color:"var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,flexShrink:0}}>{p.name[0]}</div>
                 <div style={{flex:1}}>
@@ -2941,7 +3679,33 @@ function DashboardTab({ allPlayers }) {
           })}
         </div>
 
+                <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede",marginBottom:14}}>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:4}}>ADD OR REMOVE PLAYER</div>
+          <div style={{fontSize:11,color:"var(--muted)",marginBottom:12}}>Add a new player, or remove a player with confirmation.</div>
 
+          <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8,marginBottom:12}}>
+            <input
+              className="inp"
+              placeholder="Player full name"
+              value={newPlayerName}
+              onChange={e=>setNewPlayerName(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&addDashboardPlayer()}
+              style={{margin:0}}
+            />
+            <button className="btn btn-green btn-sm" onClick={addDashboardPlayer} disabled={addingPlayer || !newPlayerName.trim()}>
+              {addingPlayer ? "…" : "Add"}
+            </button>
+          </div>
+
+          <div style={{fontSize:11,fontWeight:900,textTransform:"uppercase",letterSpacing:"0.07em",color:"var(--muted)",marginBottom:8}}>Remove Player</div>
+          {allPlayers.map(p => (
+            <div key={p.id} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:"1px solid #f8f0f0"}}>
+              <div style={{width:28,height:28,borderRadius:"50%",background:"var(--g)",color:"var(--gold)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,flexShrink:0}}>{p.name[0]}</div>
+              <div style={{flex:1,fontSize:13,fontWeight:700}}>{p.name}</div>
+              <button className="btn btn-sm btn-danger" onClick={()=>{setRemoveTarget(p);setRemoveConfirmName("");}}>Remove</button>
+            </div>
+          ))}
+        </div>
 
         {stats.total - stats.registered > 0 && (
           <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede"}}>
@@ -2984,6 +3748,93 @@ function DashboardTab({ allPlayers }) {
       )}
 
       {activeView === "consent" && <ConsentLog />}
+
+      {removeTarget && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.72)",zIndex:10040,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:"white",borderRadius:18,width:"100%",maxWidth:440,boxShadow:"0 18px 60px rgba(0,0,0,0.35)",overflow:"hidden"}}>
+            <div style={{background:"linear-gradient(135deg,#a31621,#4a0a0e)",color:"white",padding:"14px 16px"}}>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,color:"var(--gold)"}}>Confirm Remove Player</div>
+              <div style={{fontSize:12,opacity:0.78}}>This removes {removeTarget.name} from the squad list.</div>
+            </div>
+            <div style={{padding:16}}>
+              <div style={{fontSize:13,color:"var(--mid)",lineHeight:1.5,marginBottom:10}}>
+                Type the player's full name to confirm:
+                <br/><strong>{removeTarget.name}</strong>
+              </div>
+              <input className="inp" value={removeConfirmName} onChange={e=>setRemoveConfirmName(e.target.value)} placeholder={removeTarget.name} />
+              <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:14}}>
+                <button className="btn btn-ghost btn-sm" onClick={()=>{setRemoveTarget(null);setRemoveConfirmName("");}}>Cancel</button>
+                <button className="btn btn-danger btn-sm" onClick={confirmRemoveDashboardPlayer} disabled={removeConfirmName.trim() !== removeTarget.name}>Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedLeaderboardPlayer && (
+        <PlayerActivityModal
+          player={selectedLeaderboardPlayer}
+          checks={playerChecksMap[selectedLeaderboardPlayer.id] || {}}
+          points={ptsMap[selectedLeaderboardPlayer.id] || 0}
+          maxPossible={maxPossible}
+          onClose={() => setSelectedLeaderboardPlayer(null)}
+        />
+      )}
+
+      {childListView && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.72)",zIndex:10020,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:"white",borderRadius:18,width:"100%",maxWidth:720,maxHeight:"88vh",overflow:"hidden",boxShadow:"0 18px 60px rgba(0,0,0,0.35)"}}>
+            <div style={{background:"linear-gradient(135deg,var(--g),#4a0a0e)",color:"white",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+              <div>
+                <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,color:"var(--gold)",letterSpacing:"0.03em"}}>{childListTitle}</div>
+                <div style={{fontSize:12,opacity:0.75}}>{childRows.length} player{childRows.length===1?"":"s"} · times shown in Dublin time</div>
+              </div>
+              <button onClick={()=>setChildListView(null)} style={{background:"rgba(255,255,255,0.16)",color:"white",border:"1px solid rgba(255,255,255,0.25)",borderRadius:10,padding:"7px 10px",cursor:"pointer",fontWeight:900}}>✕</button>
+            </div>
+
+            <div style={{padding:14,overflowY:"auto",maxHeight:"calc(88vh - 78px)"}}>
+              {childRows.length === 0 && (
+                <div style={{textAlign:"center",color:"var(--muted)",padding:"28px 0",fontSize:13}}>No matching child app records yet.</div>
+              )}
+
+              {childRows.length > 0 && (
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                    <thead>
+                      <tr style={{background:"#fafafa",borderBottom:"1px solid #eee"}}>
+                        <th style={{textAlign:"left",padding:"9px 8px",color:"var(--muted)"}}>Player</th>
+                        <th style={{textAlign:"left",padding:"9px 8px",color:"var(--muted)"}}>Opened?</th>
+                        <th style={{textAlign:"left",padding:"9px 8px",color:"var(--muted)"}}>First opened</th>
+                        <th style={{textAlign:"left",padding:"9px 8px",color:"var(--muted)"}}>Last opened</th>
+                        <th style={{textAlign:"right",padding:"9px 8px",color:"var(--muted)"}}>Points</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {childRows.map((p,i) => {
+                        const opened = !!p.child_first_opened_at;
+                        const pts = ptsMap[p.id] || 0;
+                        return (
+                          <tr key={p.id} style={{borderBottom:i<childRows.length-1?"1px solid #f4eeee":"none"}}>
+                            <td style={{padding:"9px 8px",fontWeight:800,color:"var(--dark)"}}>{p.name}</td>
+                            <td style={{padding:"9px 8px"}}>
+                              <span style={{display:"inline-block",padding:"2px 8px",borderRadius:999,fontSize:11,fontWeight:900,color:opened?"#2e7d32":"#e65100",background:opened?"#e8f5e9":"#fff3e0"}}>
+                                {opened ? "Opened" : "Never"}
+                              </span>
+                            </td>
+                            <td style={{padding:"9px 8px",color:"var(--mid)",whiteSpace:"nowrap"}}>{formatDublin(p.child_first_opened_at)}</td>
+                            <td style={{padding:"9px 8px",color:"var(--mid)",whiteSpace:"nowrap"}}>{formatDublin(p.child_last_seen_at)}</td>
+                            <td style={{padding:"9px 8px",textAlign:"right",fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,color:"var(--g)"}}>{pts}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2997,11 +3848,11 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
 
   useEffect(() => {
     async function load() {
-      const { data: comps } = await sb.from("task_completions").select("player_id,task_key");
+      const { data: comps } = await sb.from("task_completions").select("player_id,task_key,status");
       const stats = {};
       comps?.forEach(r => {
         if (!stats[r.player_id]) stats[r.player_id] = {};
-        stats[r.player_id][r.task_key] = true;
+        stats[r.player_id][r.task_key] = r.status || "approved";
       });
       setPlayerStats(stats);
       const playerIds = allPlayers.map(p => p.id);
@@ -3095,9 +3946,6 @@ function AdminTab({ allPlayers, onRefresh, showToast }) {
         </>
       )}
 
-      <div style={{marginTop:20,textAlign:"center"}}>
-        <button className="link-btn" onClick={async()=>{ await sb.auth.signOut(); window.location.href = window.location.pathname; }}>Sign out</button>
-      </div>
     </div>
   );
 }
