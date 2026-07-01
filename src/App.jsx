@@ -56,9 +56,9 @@ const WEEKS = [
   {
     week:1, phase:"Foundation", dates:"Jun 29-Jul 5",
     runs:[
-      {label:"1k Run",distance:"1k",icon:"🏃"},
-      {label:"Star Jumps",distance:"20 reps",icon:"⭐"},
-      {label:"Frog Jumps",distance:"10 jumps",icon:"🐸"}
+      {label:"Star Jumps",distance:"50 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Lunges",distance:"25 reps",icon:"🦵",desc:"Step forward into each lunge with control, then push back to standing."},
+      {label:"Football Solos",distance:"50",icon:"⚽",desc:"Solo the football for the target number, keeping control as you move."}
     ],
     speed:[{id:"s1a",label:"⚡ Fall Forward",desc:"Practise for 5-8 minutes at least once this week. Learn the name: Fall Forward. Keep it fun: tall body, gentle lean, quick feet.",youtube_id:"PTmWJ4kk0yE"}],
     skills:[
@@ -70,9 +70,9 @@ const WEEKS = [
   {
     week:2, phase:"Foundation", dates:"Jul 6-12",
     runs:[
-      {label:"1.2k Run",distance:"1.2k",icon:"🏃"},
-      {label:"Bear Crawls",distance:"10 metres",icon:"🐻"},
-      {label:"Sliotar Keepy-Ups",distance:"10 touches",icon:"🏑"}
+      {label:"Star Jumps",distance:"75 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Lunges",distance:"40 reps",icon:"🦵",desc:"Step forward into each lunge with control, then push back to standing."},
+      {label:"Football Solos",distance:"75",icon:"⚽",desc:"Solo the football for the target number, keeping control as you move."}
     ],
     speed:[{id:"s2a",label:"⚡ Stationary Arm Swing",desc:"Practise for 5-8 minutes. Strong arms, relaxed shoulders. This is a simple speed habit for young players.",youtube_id:"NUmUwXqG1pE"}],
     skills:[
@@ -84,9 +84,9 @@ const WEEKS = [
   {
     week:3, phase:"Building", dates:"Jul 13-19",
     runs:[
-      {label:"1.4k Run",distance:"1.4k",icon:"🏃"},
-      {label:"Crab Walks",distance:"10 metres",icon:"🦀"},
-      {label:"Star Jumps",distance:"25 reps",icon:"⭐"}
+      {label:"Star Jumps",distance:"100 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Lunges",distance:"50 reps",icon:"🦵",desc:"Step forward into each lunge with control, then push back to standing."},
+      {label:"Football Solos",distance:"100",icon:"⚽",desc:"Solo the football for the target number, keeping control as you move."}
     ],
     speed:[{id:"s3a",label:"⚡ A March",desc:"Practise for 5-8 minutes. March tall, knees up, strong arms. This is easier than sprinting and great for technique.",youtube_id:"HISmA4pZWp0"}],
     skills:[
@@ -98,9 +98,9 @@ const WEEKS = [
   {
     week:4, phase:"Building", dates:"Jul 20-26",
     runs:[
-      {label:"1.6k Run",distance:"1.6k",icon:"🏃"},
-      {label:"Frog Jumps",distance:"15 jumps",icon:"🐸"},
-      {label:"Bear Crawls",distance:"15 metres",icon:"🐻"}
+      {label:"Star Jumps",distance:"125 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Squats",distance:"40 reps",icon:"💪",desc:"Keep your chest up, bend your knees, and stand tall after each squat."},
+      {label:"Football Solos (Each Foot)",distance:"40",icon:"⚽",desc:"Complete the target number of football solos on each foot."}
     ],
     speed:[{id:"s4a",label:"⚡ Ankling Drill",desc:"Practise for 5-8 minutes. Small quick steps, stay light on your feet. Keep the distance short.",youtube_id:"11xHsMcomf4"}],
     skills:[
@@ -112,9 +112,9 @@ const WEEKS = [
   {
     week:5, phase:"Push", dates:"Jul 27-Aug 2",
     runs:[
-      {label:"1.8k Run",distance:"1.8k",icon:"🏃"},
-      {label:"Sliotar Keepy-Ups",distance:"15 touches",icon:"🏑"},
-      {label:"Crab Walks",distance:"15 metres",icon:"🦀"}
+      {label:"Star Jumps",distance:"150 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Squats",distance:"50 reps",icon:"💪",desc:"Keep your chest up, bend your knees, and stand tall after each squat."},
+      {label:"Walking Solos",distance:"50",icon:"🚶",desc:"Walk while soloing the football, keeping it close and controlled."}
     ],
     speed:[{id:"s5a",label:"⚡ Butt Kicks",desc:"Practise for 5-8 minutes. Heel up, light steps, relaxed arms. Do short bursts only.",youtube_id:"p7OBdAJu9E8"}],
     skills:[
@@ -126,9 +126,9 @@ const WEEKS = [
   {
     week:6, phase:"Push", dates:"Aug 3-9",
     runs:[
-      {label:"2k Run",distance:"2k",icon:"🏃"},
-      {label:"Star Jumps",distance:"30 reps",icon:"⭐"},
-      {label:"Bear Crawls",distance:"20 metres",icon:"🐻"}
+      {label:"Star Jumps",distance:"150 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Jogging Solos",distance:"50",icon:"🏃",desc:"Jog while soloing the football and try to keep a smooth rhythm."},
+      {label:"Hurling Solo",distance:"10 steps",icon:"🏑",desc:"Solo the sliotar on the hurl for the target number of steps."}
     ],
     speed:[{id:"s6a",label:"⚡ A Skip",desc:"Practise for 5-8 minutes. Keep it bouncy and controlled. Short distance only, quality over speed.",youtube_id:"2I4rDiFs6Ec"}],
     skills:[
@@ -140,9 +140,9 @@ const WEEKS = [
   {
     week:7, phase:"Peak", dates:"Aug 10-16",
     runs:[
-      {label:"2.2k Run",distance:"2.2k",icon:"🏃"},
-      {label:"Frog Jumps",distance:"20 jumps",icon:"🐸"},
-      {label:"Sliotar Keepy-Ups",distance:"20 touches",icon:"🏑"}
+      {label:"Star Jumps",distance:"175 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Jogging Solos (Each Foot)",distance:"30",icon:"🏃",desc:"Complete the target number of jogging solos on each foot."},
+      {label:"Hurling Jogging Solo",distance:"15 steps",icon:"🏑",desc:"Jog while soloing the sliotar on the hurl for the target number of steps."}
     ],
     speed:[{id:"s7a",label:"⚡ Wall Knee Drive",desc:"Practise for 5-8 minutes. Gentle wall position, knee drive up, stay balanced. Keep sets short.",youtube_id:"ZW9rjy9TgGM"}],
     skills:[
@@ -154,9 +154,9 @@ const WEEKS = [
   {
     week:8, phase:"Peak", dates:"Aug 17-23",
     runs:[
-      {label:"2.5k Run",distance:"2.5k",icon:"🏃"},
-      {label:"Crab Walks",distance:"20 metres",icon:"🦀"},
-      {label:"Star Jumps",distance:"40 reps",icon:"⭐"}
+      {label:"Run",distance:"1 km",icon:"🏃",desc:"Run, jog or walk the target distance and try to keep moving the whole way."},
+      {label:"Jogging Solos (Each Foot)",distance:"50",icon:"🏃",desc:"Complete the target number of jogging solos on each foot."},
+      {label:"Hurling Solo",distance:"25 steps",icon:"🏑",desc:"Solo the sliotar on the hurl for the target number of steps."}
     ],
     speed:[{id:"s8a",label:"⚡ Fall Forward Finale",desc:"Final week: practise Fall Forward again for 5-8 minutes. Show how much cleaner and quicker your start looks now.",youtube_id:"PTmWJ4kk0yE"}],
     skills:[
@@ -471,7 +471,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .wk-hero-hd .sport-badge{font-size:13px;font-weight:700;margin-top:4px}
 .wk-hero-hd .wk-dates{font-size:12px;opacity:0.65;margin-top:2px}
 .runs-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center;width:100%}
-.run-chip{font-size:12px;font-weight:800;padding:8px 10px;border-radius:18px;background:rgba(0,0,0,0.08);cursor:pointer;transition:all 0.15s;border:2px solid transparent;flex:1 1 calc(33.333% - 6px);text-align:center;white-space:normal;min-width:88px;min-height:46px;display:flex;align-items:center;justify-content:center;line-height:1.2;overflow-wrap:anywhere;word-break:normal}
+.run-chip{min-width:112px;justify-content:center;white-space:nowrap;font-size:12px;font-weight:800;padding:8px 10px;border-radius:18px;background:rgba(0,0,0,0.08);cursor:pointer;transition:all 0.15s;border:2px solid transparent;flex:1 1 calc(33.333% - 6px);text-align:center;white-space:normal;min-width:88px;min-height:46px;display:flex;align-items:center;justify-content:center;line-height:1.2;overflow-wrap:anywhere;word-break:normal}
 .run-chip.done{background:var(--g);color:white;border-color:var(--g)}
 .run-chip:hover:not(.done){background:rgba(0,0,0,0.14)}
 .prog-bar-bg{height:6px;background:#f0dede;border-radius:3px;overflow:hidden;margin:12px 18px 4px}
@@ -505,11 +505,12 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .mark-undone{background:#eee;color:var(--mid)}
 .mark-undone:hover{background:#e0e0e0}
 .squad-card{background:linear-gradient(135deg,#7d1018 0%,var(--g) 100%);border-radius:var(--radius);box-shadow:var(--shadow-lg);margin-bottom:12px;overflow:hidden}
-.squad-hd{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none}
-.squad-icon{font-size:26px;flex-shrink:0}
-.squad-hd-text .squad-type{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.6)}
-.squad-hd-text .squad-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;color:white;letter-spacing:0.02em}
-.squad-pts{font-size:12px;font-weight:900;color:var(--dark);background:var(--gold);padding:3px 10px;border-radius:10px;flex-shrink:0}
+.squad-hd{display:grid;grid-template-columns:34px 1fr 70px 24px;align-items:center;gap:10px;padding:16px 18px;cursor:pointer;user-select:none}
+.squad-icon{font-size:28px;line-height:1;text-align:center;margin-bottom:4px}
+.squad-hd-text{text-align:center;min-width:0}
+.squad-hd-text .squad-type{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.68);line-height:1.25}
+.squad-hd-text .squad-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;color:white;letter-spacing:0.02em;line-height:1.05}
+.squad-pts{font-size:12px;font-weight:900;color:var(--dark);background:var(--gold);padding:4px 8px;border-radius:10px;text-align:center;justify-self:end;white-space:nowrap}
 .squad-body{border-top:1px solid rgba(255,255,255,0.12);padding:14px 18px}
 .squad-desc{font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;margin-bottom:14px}
 .squad-cta{font-size:12px;color:var(--gold2);font-weight:700;margin-bottom:12px}
@@ -530,7 +531,7 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .prog-mini{height:4px;border-radius:2px;background:#f0dede;overflow:hidden;margin-top:4px}
 .prog-mini-fill{height:100%;border-radius:2px;background:var(--g)}
 .add-form{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;margin-bottom:14px}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--g);color:white;padding:10px 22px;border-radius:24px;font-weight:700;font-size:14px;box-shadow:0 6px 28px rgba(163,22,33,0.35);z-index:9999;white-space:nowrap;pointer-events:none;animation:tin 0.25s ease}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--g);color:white;padding:10px 18px;border-radius:24px;font-weight:700;font-size:14px;box-shadow:0 6px 28px rgba(163,22,33,0.35);z-index:9999;white-space:normal;pointer-events:none;animation:tin 0.25s ease;max-width:calc(100vw - 32px);width:max-content;text-align:center;line-height:1.35;box-sizing:border-box}
 @keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
 @keyframes confetti-fall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
@@ -2151,15 +2152,15 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                   if(expandedSquad && !done && !pending && !returned) showToast("💪 Don't forget to submit your Squad Session if you completed this!");
                   setExpandedSquad(v=>!v);
                 }}>{done?"✓":pending?"…":returned?"↺":""}</div>
-              <div className="squad-icon">👥</div>
               <div className="squad-hd-text">
-                <div className="squad-type">
-                  Squad Session · +{PTS.squad} pts {pending ? "· Awaiting approval" : returned ? "· Returned" : ""}
-                </div>
+                <div className="squad-icon">👥</div>
                 <div className="squad-name">{w.squad.label}</div>
+                <div className="squad-type">
+                  +{PTS.squad} pts {pending ? "· Awaiting approval" : returned ? "· Returned" : ""}
+                </div>
               </div>
               <div className="squad-pts">{pending ? "Pending" : returned ? "Returned" : `+${PTS.squad}`}</div>
-              <div style={{fontSize:18,color:"rgba(255,255,255,0.5)",transition:"transform 0.2s",transform:expandedSquad?"rotate(180deg)":"none"}}>⌄</div>
+              <div style={{fontSize:20,color:"rgba(255,255,255,0.65)",transition:"transform 0.2s",transform:expandedSquad?"rotate(180deg)":"none",justifySelf:"end"}}>⌄</div>
             </div>
             {expandedSquad && (
               <div className="squad-body">
@@ -2379,7 +2380,7 @@ function AdminProgressSnapshot({ allPlayers }) {
           w.speed.forEach(s => { if (isApproved(c[speedKey(w.week,s.id)])) { sessions++; minutes += 10; } });
           // Squad Sessions are bonus approvals, not training sessions for the Sessions Logged / Minutes Active boxes.
           // They still count for points via totalPts(c).
-          if (isApproved(c[squadKey(w.week)])) { /* bonus only */ }
+          if (isApproved(c[squadKey(w.week)])) { sessions++; minutes += 20; }
         });
         return { ...p, checks:c, sessions, minutes, pts:totalPts(c), totalKm };
       }).sort((a,b)=>b.pts-a.pts));
@@ -2413,14 +2414,14 @@ function AdminProgressSnapshot({ allPlayers }) {
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
               {[
-                { label:"Sessions\\nLogged", value:p.sessions, suffix:"", icon:"✅", color:"var(--g)" },
-                { label:"Minutes\\nActive", value:p.minutes, suffix:" min", icon:"⏱", color:"#2e7d32" },
-                { label:"Total\\nPoints", value:p.pts, suffix:" pts", icon:"⭐", color:"#b8860b" },
+                { label:"Sessions Logged", value:p.sessions, suffix:"", icon:"✅", color:"var(--g)" },
+                { label:"Minutes Active", value:p.minutes, suffix:" min", icon:"⏱", color:"#2e7d32" },
+                { label:"Total Points", value:p.pts, suffix:" pts", icon:"⭐", color:"#b8860b" },
               ].map(s => (
                 <div key={s.label} style={{background:"#fdfafa",borderRadius:12,padding:"10px 6px",textAlign:"center",border:"1px solid #f0dede"}}>
                   <div style={{fontSize:18}}>{s.icon}</div>
                   <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:24,color:s.color,lineHeight:1,marginTop:3}}>{s.value}{s.suffix}</div>
-                  <div style={{fontSize:9,color:"var(--muted)",whiteSpace:"pre-line",lineHeight:1.2,marginTop:3}}>{s.label}</div>
+                  <div style={{fontSize:9,color:"var(--muted)",lineHeight:1.2,marginTop:3}}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -2454,20 +2455,20 @@ function ProgressTab({ player, checks, isAdmin, allPlayers = [] }) {
     const runMins = 20, skillMins = 20;
     WEEKS.forEach(w => {
       w.runs.forEach((r, i) => {
-        if (checks[runKey(w.week, i)]) {
+        if (isApproved(checks[runKey(w.week, i)])) {
           sessions++; minutes += runMins; pts += PTS.run;
           if ((r.label || "").toLowerCase().includes("run")) totalKm += parseFloat(r.distance) || 0;
         }
       });
       w.skills.forEach(s => {
-        if (checks[skillKey(w.week, s.id)]) { sessions++; minutes += skillMins; pts += PTS.skill; }
+        if (isApproved(checks[skillKey(w.week, s.id)])) { sessions++; minutes += skillMins; pts += PTS.skill; }
       });
       w.speed.forEach(s => {
-        if (checks[speedKey(w.week, s.id)]) { sessions++; minutes += 10; pts += PTS.speed; }
+        if (isApproved(checks[speedKey(w.week, s.id)])) { sessions++; minutes += 10; pts += PTS.speed; }
       });
       // Squad Sessions are bonus approvals, not training sessions for the Sessions Logged / Minutes Active boxes.
       // They still count for points.
-      if (isApproved(checks[squadKey(w.week)])) { pts += PTS.squad; }
+      if (isApproved(checks[squadKey(w.week)])) { sessions++; minutes += 20; pts += PTS.squad; }
     });
     return { sessions, minutes, pts, totalKm };
   }, [checks]);
@@ -2475,10 +2476,10 @@ function ProgressTab({ player, checks, isAdmin, allPlayers = [] }) {
   const weeklyData = useMemo(() => {
     return WEEKS.map(w => {
       let runs = 0, skills = 0, speed = 0, squad = 0;
-      w.runs.forEach((_, i) => { if (checks[runKey(w.week, i)]) runs++; });
-      w.skills.forEach(s => { if (checks[skillKey(w.week, s.id)]) skills++; });
-      w.speed.forEach(s => { if (checks[speedKey(w.week, s.id)]) speed++; });
-      if (checks[squadKey(w.week)]) squad = 1;
+      w.runs.forEach((_, i) => { if (isApproved(checks[runKey(w.week, i)])) runs++; });
+      w.skills.forEach(s => { if (isApproved(checks[skillKey(w.week, s.id)])) skills++; });
+      w.speed.forEach(s => { if (isApproved(checks[speedKey(w.week, s.id)])) speed++; });
+      if (isApproved(checks[squadKey(w.week)])) squad = 1;
       const total = runs + skills + speed + squad;
       const maxPoss = w.runs.length + w.skills.length + w.speed.length + 1;
       return { week: w.week, runs, skills, speed, squad, total, maxPoss };
@@ -2505,7 +2506,7 @@ function ProgressTab({ player, checks, isAdmin, allPlayers = [] }) {
         ? new Date(c.completed_at).toLocaleDateString("en-IE", { day:"numeric", month:"short", year:"numeric" })
         : null;
       return { label, type, week, date, key: k };
-    }).filter(a => a.label && a.type !== "squad");
+    }).filter(a => a.label);
   }, [completions]);
 
   const typeStyle = {
@@ -2542,16 +2543,16 @@ function ProgressTab({ player, checks, isAdmin, allPlayers = [] }) {
 
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16,width:"100%"}}>
         {[
-          { label:"Sessions\nLogged", value: stats.sessions, suffix:"",     color:"var(--g)", icon:"✅" },
-          { label:"Minutes\nActive",  value: stats.minutes,  suffix:" min", color:"#2e7d32",  icon:"⏱" },
-          { label:"Total\nPoints",    value: stats.pts,      suffix:" pts", color:"#b8860b",  icon:"⭐" },
+          { label:"Sessions Logged", value: stats.sessions, suffix:"",     color:"var(--g)", icon:"✅" },
+          { label:"Minutes Active",  value: stats.minutes,  suffix:" min", color:"#2e7d32",  icon:"⏱" },
+          { label:"Total Points",    value: stats.pts,      suffix:" pts", color:"#b8860b",  icon:"⭐" },
         ].map(s => (
           <div key={s.label} style={{background:"white",borderRadius:12,padding:"12px 8px",textAlign:"center",border:"1px solid #f0dede"}}>
             <div style={{fontSize:20}}>{s.icon}</div>
             <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:s.color,lineHeight:1,marginTop:4}}>
               {s.value}{s.suffix}
             </div>
-            <div style={{fontSize:10,color:"var(--muted)",marginTop:3,whiteSpace:"pre-line",lineHeight:1.3}}>{s.label}</div>
+            <div style={{fontSize:10,color:"var(--muted)",marginTop:3,lineHeight:1.3}}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -3422,7 +3423,7 @@ function DashboardTab({ allPlayers, onRefresh, showToast }) {
       setRecentLog((logs || []).filter(r => !r.squad || r.squad === APP_SQUAD).slice(0, 20));
 
       const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
-      const validComps = (comps || []).filter(r => r.status !== "rejected");
+      const validComps = (comps || []).filter(r => r.status === "approved" || !r.status);
       const recentSessionRows = validComps
         .filter(r => r.completed_at && new Date(r.completed_at) > weekAgo)
         .sort((a,b) => new Date(b.completed_at || 0) - new Date(a.completed_at || 0));
@@ -3757,7 +3758,7 @@ function DashboardTab({ allPlayers, onRefresh, showToast }) {
             <div>
               <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:"#b8860b",letterSpacing:"0.04em",fontWeight:900}}>BONUS POINTS TO APPROVE</div>
               <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>
-                {pendingBonus.length} waiting · approve once proof is posted in WhatsApp
+                {pendingBonus.length} waiting · approve once proof is confirmed
               </div>
             </div>
             <div style={{fontSize:26}}>🏅</div>
