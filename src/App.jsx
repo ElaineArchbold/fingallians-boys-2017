@@ -2529,8 +2529,8 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#fffaf2"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#a31621"; ctx.fillRect(0, 0, canvas.width, 230);
-    ctx.fillStyle = "#f4c542"; ctx.font = "bold 54px Arial"; ctx.textAlign = "center"; ctx.fillText("SUMMER FITNESS CHALLENGE", 540, 82);
-    ctx.fillStyle = "#ffffff"; ctx.font = "bold 42px Arial"; ctx.fillText("RUN COMPLETE", 540, 145);
+    ctx.fillStyle = "#f4c542"; ctx.font = "bold 54px Arial"; ctx.textAlign = "center"; ctx.fillText("SUMMER FITNESS CHALLENGE", canvas.width / 2, 82, canvas.width - 120);
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 42px Arial"; ctx.textAlign = "center"; ctx.fillText("RUN COMPLETE", canvas.width / 2, 145, canvas.width - 120);
     ctx.font = "bold 30px Arial"; ctx.fillText(runType, 540, 190);
 
     ctx.fillStyle = "#2b1717"; ctx.font = "bold 52px Arial"; ctx.fillText(player?.name || "Player", 540, 300);
