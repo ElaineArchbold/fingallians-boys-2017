@@ -12,7 +12,7 @@ const SUPER_ADMIN_EMAIL = "e.t.archbold@gmail.com";
 const FORMSPREE_URL     = "https://formspree.io/f/mrewqpqo";
 const WHATSAPP_LINK     = "https://chat.whatsapp.com/FJLfHJpjKbi6KFGzHbpEoQ";
 const APP_SQUAD         = "2017 Boys";
-const CURRENT_TERMS_VERSION = "v2"; // Do not change for app updates. Only change when the actual Terms & Conditions text materially changes.
+const CURRENT_TERMS_VERSION = "v2"; // App build: v1.5.8 run history moved to Progress tab. // Do not change for app updates. Only change when the actual Terms & Conditions text materially changes.
 const CONSENT_START_DATE = "2026-06-26T00:00:00.000Z";
 
 // Admin accounts that should be auto-linked to a player by name
@@ -395,8 +395,13 @@ body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-he
 .shell{max-width:560px;width:100%;margin:0 auto;padding-bottom:88px}
 
 .run-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.58);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px}
-.run-modal{position:relative;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:white;border-radius:22px;padding:18px;box-shadow:0 24px 80px rgba(0,0,0,0.35)}
+.run-modal{position:relative;width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;background:white;border-radius:22px;padding:18px;box-shadow:0 24px 80px rgba(0,0,0,0.35)}
 .run-modal-close{position:absolute;top:10px;right:12px;border:0;background:#f8f1f1;color:var(--g);width:34px;height:34px;border-radius:50%;font-size:24px;font-weight:900;line-height:1;cursor:pointer}
+
+
+.run-map-marker{background:transparent;border:0}
+.run-map-dot.start{width:18px;height:18px;border-radius:50%;background:#2e7d32;color:#2e7d32;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35);font-size:0}
+.run-map-dot.finish{font-size:24px;line-height:1;text-shadow:0 2px 6px rgba(0,0,0,0.35)}
 
 @media(min-width:640px){
   .shell{max-width:720px}
@@ -1410,7 +1415,7 @@ export default function App() {
         )}
 
         {session && (player || isAdmin) && tab === "progress" && (
-          <ProgressTab player={player} checks={checks} isAdmin={isAdmin} allPlayers={allPlayers} />
+          <ProgressTab player={player} checks={checks} isAdmin={isAdmin} allPlayers={allPlayers} showToast={showToast} />
         )}
 
         {session && isSuperAdmin && tab === "dashboard" && (
@@ -2025,6 +2030,154 @@ function WeekCountdown({ weekNum }) {
 
 
 
+
+const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+const LEAFLET_JS_URL  = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+let leafletLoadingPromise = null;
+
+function loadLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  if (leafletLoadingPromise) return leafletLoadingPromise;
+
+  leafletLoadingPromise = new Promise((resolve, reject) => {
+    if (!document.querySelector(`link[href="${LEAFLET_CSS_URL}"]`)) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = LEAFLET_CSS_URL;
+      document.head.appendChild(link);
+    }
+
+    const existingScript = document.querySelector(`script[src="${LEAFLET_JS_URL}"]`);
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(window.L));
+      existingScript.addEventListener("error", reject);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = LEAFLET_JS_URL;
+    script.async = true;
+    script.onload = () => resolve(window.L);
+    script.onerror = reject;
+    document.body.appendChild(script);
+  });
+
+  return leafletLoadingPromise;
+}
+
+function RunRouteMap({ points, height = 220 }) {
+  const mapEl = useRef(null);
+  const mapRef = useRef(null);
+  const lineRef = useRef(null);
+  const startMarkerRef = useRef(null);
+  const finishMarkerRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
+  const hasPoints = Array.isArray(points) && points.length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    loadLeaflet()
+      .then((L) => {
+        if (cancelled || !mapEl.current || mapRef.current) return;
+
+        const first = hasPoints ? points[0] : { lat: 53.388, lng: -6.244 };
+        const map = L.map(mapEl.current, {
+          zoomControl: true,
+          attributionControl: false,
+          scrollWheelZoom: false,
+        }).setView([first.lat, first.lng], hasPoints ? 16 : 13);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+        }).addTo(map);
+
+        mapRef.current = map;
+        setMapReady(true);
+        setTimeout(() => map.invalidateSize(), 150);
+      })
+      .catch((e) => {
+        console.error("Leaflet failed to load", e);
+      });
+
+    return () => {
+      cancelled = true;
+      if (mapRef.current) {
+        try { mapRef.current.remove(); } catch (_) {}
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const L = window.L;
+    const map = mapRef.current;
+    if (!L || !map || !mapReady) return;
+
+    if (lineRef.current) {
+      try { map.removeLayer(lineRef.current); } catch (_) {}
+      lineRef.current = null;
+    }
+    if (startMarkerRef.current) {
+      try { map.removeLayer(startMarkerRef.current); } catch (_) {}
+      startMarkerRef.current = null;
+    }
+    if (finishMarkerRef.current) {
+      try { map.removeLayer(finishMarkerRef.current); } catch (_) {}
+      finishMarkerRef.current = null;
+    }
+
+    if (!hasPoints) {
+      map.setView([53.388, -6.244], 13);
+      return;
+    }
+
+    const latLngs = points.map(p => [p.lat, p.lng]);
+    lineRef.current = L.polyline(latLngs, {
+      color: "#a31621",
+      weight: 5,
+      opacity: 0.92,
+      lineCap: "round",
+      lineJoin: "round",
+    }).addTo(map);
+
+    const startIcon = L.divIcon({
+      className: "run-map-marker",
+      html: "<div class='run-map-dot start'>●</div>",
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+    const finishIcon = L.divIcon({
+      className: "run-map-marker",
+      html: "<div class='run-map-dot finish'>🏁</div>",
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+
+    startMarkerRef.current = L.marker(latLngs[0], { icon: startIcon }).addTo(map);
+    finishMarkerRef.current = L.marker(latLngs[latLngs.length - 1], { icon: finishIcon }).addTo(map);
+
+    const bounds = lineRef.current.getBounds();
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [28, 28], maxZoom: 17 });
+    setTimeout(() => map.invalidateSize(), 100);
+  }, [points, hasPoints, mapReady]);
+
+  return (
+    <div style={{height,borderRadius:14,overflow:"hidden",border:"1px solid #e5d4d4",position:"relative",background:"#e8f5e9",marginBottom:10}}>
+      <div ref={mapEl} style={{position:"absolute",inset:0}} />
+      {!hasPoints && (
+        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--muted)",fontWeight:800,fontSize:13,textAlign:"center",padding:20,background:"rgba(255,255,255,0.7)",pointerEvents:"none"}}>
+          Start GPS to show your live route on the map.
+        </div>
+      )}
+      <div style={{position:"absolute",left:10,bottom:8,fontSize:10,color:"var(--muted)",fontWeight:800,background:"rgba(255,255,255,0.85)",borderRadius:999,padding:"4px 8px",pointerEvents:"none"}}>
+        OpenStreetMap route preview
+      </div>
+    </div>
+  );
+}
+
+
 function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, showToast, player, ps }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("gps");
@@ -2038,28 +2191,47 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
   const [manualNote, setManualNote] = useState("");
   const [lastVoiceKm, setLastVoiceKm] = useState(0);
   const [history, setHistory] = useState([]);
+  const [deletedHistory, setDeletedHistory] = useState([]);
   const [savedRun, setSavedRun] = useState(null);
+  const [shareImageUrl, setShareImageUrl] = useState(null);
+  const [selectedRun, setSelectedRun] = useState(null);
   const watchRef = useRef(null);
   const timerRef = useRef(null);
   const pausedRef = useRef(false);
 
   const storageKey = `runLog:${APP_SQUAD}:${taskKey}`;
   const historyKey = `runHistory:${APP_SQUAD}:${player?.id || "unknown"}`;
+  const deletedHistoryKey = `runHistoryDeleted:${APP_SQUAD}:${player?.id || "unknown"}`;
 
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
       if (saved) {
         setSavedRun(saved);
-        setManualDistance(saved.distanceKm ? String(saved.distanceKm) : "");
-        setManualMinutes(saved.durationMin ? String(saved.durationMin) : "");
-        setManualNote(saved.note || "");
         if (saved.type === "gps" && Array.isArray(saved.points)) setPoints(saved.points);
       }
       const h = JSON.parse(localStorage.getItem(historyKey) || "[]");
       setHistory(Array.isArray(h) ? h : []);
+      const deleted = JSON.parse(localStorage.getItem(deletedHistoryKey) || "[]");
+      setDeletedHistory(Array.isArray(deleted) ? deleted : []);
     } catch (_) {}
-  }, [storageKey, historyKey]);
+  }, [storageKey, historyKey, deletedHistoryKey]);
+
+  useEffect(() => {
+    if (open) {
+      stopWatchingOnly();
+      setTracking(false);
+      setPaused(false);
+      pausedRef.current = false;
+      setStartedAt(null);
+      setElapsed(0);
+      setPoints([]);
+      setLastVoiceKm(0);
+      setShareImageUrl(null);
+      setSelectedRun(null);
+      resetManualFields();
+    }
+  }, [open, run.distance]);
 
   useEffect(() => () => stopWatchingOnly(), []);
 
@@ -2086,6 +2258,29 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     const match = raw.match(/([\d.]+)\s*k/);
     return match ? Number(match[1]) : null;
   }
+
+  function resetManualFields() {
+    const target = targetKm();
+    setManualDistance(target ? String(target) : "");
+    setManualMinutes("");
+    setManualNote("");
+  }
+  function closeRunModal() {
+    stopWatchingOnly();
+    setTracking(false);
+    setPaused(false);
+    pausedRef.current = false;
+    setStartedAt(null);
+    setElapsed(0);
+    setPoints([]);
+    setLastVoiceKm(0);
+    setShareImageUrl(null);
+    setSelectedRun(null);
+    setMode("gps");
+    resetManualFields();
+    setOpen(false);
+  }
+
   function stopWatchingOnly() {
     if (watchRef.current) {
       try { navigator.geolocation.clearWatch(watchRef.current); } catch (_) {}
@@ -2107,10 +2302,144 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
   }
   function saveHistory(entry) {
     try {
-      const next = [entry, ...history].slice(0, 20);
+      const runEntry = {
+        ...entry,
+        id: entry.id || `${entry.taskKey || taskKey}:${Date.now()}`,
+        savedAt: entry.savedAt || new Date().toISOString()
+      };
+      const next = [runEntry, ...history.filter(h => h.id !== runEntry.id)].slice(0, 20);
       setHistory(next);
       localStorage.setItem(historyKey, JSON.stringify(next));
-    } catch (_) {}
+      return runEntry;
+    } catch (_) {
+      return entry;
+    }
+  }
+
+  function deleteRunHistory(runId, runTaskKey) {
+    try {
+      const runToDelete = history.find(h => h.id === runId);
+      if (!runToDelete) return;
+
+      const ok = window.confirm(
+        "Remove this run from history? You can restore it from Recently Deleted."
+      );
+      if (!ok) return;
+
+      const nextHistory = history.filter(h => h.id !== runId);
+      const deletedEntry = { ...runToDelete, deletedAt: new Date().toISOString() };
+      const nextDeleted = [deletedEntry, ...deletedHistory.filter(h => h.id !== runId)].slice(0, 20);
+
+      setHistory(nextHistory);
+      setDeletedHistory(nextDeleted);
+      localStorage.setItem(historyKey, JSON.stringify(nextHistory));
+      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
+
+      if (selectedRun?.id === runId) setSelectedRun(null);
+
+      showToast?.("🗑️ Moved to Recently Deleted");
+    } catch (e) {
+      console.error("Move to Recently Deleted failed", e);
+      showToast?.("Could not remove that run");
+    }
+  }
+
+  function restoreDeletedRun(runId) {
+    try {
+      const runToRestore = deletedHistory.find(h => h.id === runId);
+      if (!runToRestore) return;
+
+      const restored = { ...runToRestore };
+      delete restored.deletedAt;
+
+      const nextDeleted = deletedHistory.filter(h => h.id !== runId);
+      const nextHistory = [restored, ...history.filter(h => h.id !== runId)].slice(0, 20);
+
+      setDeletedHistory(nextDeleted);
+      setHistory(nextHistory);
+      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
+      localStorage.setItem(historyKey, JSON.stringify(nextHistory));
+
+      if (restored.taskKey === taskKey) {
+        localStorage.setItem(storageKey, JSON.stringify(restored));
+        setSavedRun(restored);
+        setShareImageUrl(restored.shareImageUrl || null);
+      }
+
+      showToast?.("↩️ Run restored");
+    } catch (e) {
+      console.error("Restore run failed", e);
+      showToast?.("Could not restore that run");
+    }
+  }
+
+  function deleteRunForever(runId) {
+    try {
+      const ok = window.confirm("Delete this run forever from this device? This cannot be undone.");
+      if (!ok) return;
+
+      const runToDelete = deletedHistory.find(h => h.id === runId);
+      const nextDeleted = deletedHistory.filter(h => h.id !== runId);
+
+      setDeletedHistory(nextDeleted);
+      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
+
+      if (selectedRun?.id === runId) setSelectedRun(null);
+
+      if (runToDelete?.taskKey === taskKey) {
+        localStorage.removeItem(storageKey);
+        setSavedRun(null);
+        setShareImageUrl(null);
+      }
+
+      showToast?.("🗑️ Run deleted forever");
+    } catch (e) {
+      console.error("Delete forever failed", e);
+      showToast?.("Could not delete that run");
+    }
+  }
+
+  function removeCompletedRun() {
+    if (!done) return;
+    const ok = window.confirm(
+      "Remove this completed run? This will remove the local run record, remove the points, and mark this challenge as incomplete."
+    );
+    if (!ok) return;
+
+    try {
+      const next = history.filter(h => h.taskKey !== taskKey);
+      const nextDeleted = deletedHistory.filter(h => h.taskKey !== taskKey);
+      setHistory(next);
+      setDeletedHistory(nextDeleted);
+      localStorage.setItem(historyKey, JSON.stringify(next));
+      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
+      localStorage.removeItem(storageKey);
+      setSavedRun(null);
+      setSelectedRun(null);
+      setShareImageUrl(null);
+    } catch (e) {
+      console.error("Local run removal failed", e);
+    }
+
+    if (canToggle) {
+      onToggle(taskKey, PTS.run, `${run.icon || "🏃"} ${run.label} (${run.distance})`);
+    }
+    showToast?.("↩️ Run removed and challenge unchecked");
+  }
+
+  function formatRunDateTime(ts) {
+    if (!ts) return "";
+    try {
+      return new Date(ts).toLocaleString("en-IE", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (_) {
+      return "";
+    }
   }
   function startGps() {
     if (!navigator.geolocation) {
@@ -2180,14 +2509,16 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
       target: run.distance,
       distanceKm,
       durationMin,
-      pace: distanceKm > 0 ? Number((durationMin / distanceKm).toFixed(2)) : null,
+      pace: distanceKm > 0 && durationMin ? Number((durationMin / distanceKm).toFixed(2)) : null,
       points,
       savedAt: new Date().toISOString()
     };
-    setSavedRun(saved);
-    setSavedRun(saved);
-    try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch (_) {}
-    saveHistory(saved);
+    const imageUrl = createShareImage(saved, { silent: true });
+    const savedWithImage = { ...saved, shareImageUrl: imageUrl };
+    setSavedRun(savedWithImage);
+    setShareImageUrl(imageUrl);
+    try { localStorage.setItem(storageKey, JSON.stringify(savedWithImage)); } catch (_) {}
+    saveHistory(savedWithImage);
     setManualDistance(String(distanceKm));
     setManualMinutes(String(durationMin));
     const target = targetKm();
@@ -2200,13 +2531,9 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
   }
   function saveManual() {
     const distanceKm = Number(manualDistance);
-    const durationMin = Number(manualMinutes);
+    const durationMin = null;
     if (!distanceKm || distanceKm <= 0) {
       showToast?.("Enter the distance completed.");
-      return;
-    }
-    if (!durationMin || durationMin <= 0) {
-      showToast?.("Enter the time taken.");
       return;
     }
     const saved = {
@@ -2217,22 +2544,136 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
       target: run.distance,
       distanceKm,
       durationMin,
-      pace: distanceKm > 0 ? Number((durationMin / distanceKm).toFixed(2)) : null,
+      pace: distanceKm > 0 && durationMin ? Number((durationMin / distanceKm).toFixed(2)) : null,
       note: manualNote,
       savedAt: new Date().toISOString()
     };
-    try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch (_) {}
-    saveHistory(saved);
+    const imageUrl = createShareImage(saved, { silent: true });
+    const savedWithImage = { ...saved, shareImageUrl: imageUrl };
+    setSavedRun(savedWithImage);
+    setShareImageUrl(imageUrl);
+    try { localStorage.setItem(storageKey, JSON.stringify(savedWithImage)); } catch (_) {}
+    saveHistory(savedWithImage);
     const target = targetKm();
     const meetsTarget = !target || distanceKm >= target;
     showToast?.(meetsTarget
-      ? `🏃 Run logged: ${distanceKm} km in ${durationMin} min`
+      ? `🏃 Run logged: ${distanceKm} km${durationMin ? ` in ${durationMin} min` : ""}`
       : `Run saved, but target is ${target} km. It will not count yet.`);
     if (meetsTarget && !done && canToggle) onToggle(taskKey, PTS.run, `${run.icon || "🏃"} ${run.label} (${run.distance})`);
+    resetManualFields();
   }
   function shareWhatsApp() {
-    const msg = `${player?.name || "Player"} completed ${manualDistance || distanceKm} km in ${manualMinutes || Math.max(1, Math.round(elapsed/60))} min for Week ${week} ${run.label}! 🏃`;
+    const msg = `${player?.name || "Player"} completed ${manualDistance || distanceKm} km${manualMinutes ? ` in ${manualMinutes} min` : ""} for Week ${week} ${run.label}! 🏃`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  }
+
+  function drawRoutePreview(ctx, routePoints, x, y, w, h) {
+    ctx.fillStyle = "#e8f5e9";
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#cfe8d2";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath(); ctx.moveTo(x, y + (h / 6) * i); ctx.lineTo(x + w, y + (h / 6) * i); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + (w / 6) * i, y); ctx.lineTo(x + (w / 6) * i, y + h); ctx.stroke();
+    }
+    if (!routePoints || routePoints.length < 2) {
+      ctx.fillStyle = "#8d6e63"; ctx.font = "bold 22px Arial"; ctx.textAlign = "center";
+      ctx.fillText("Route saved locally", x + w / 2, y + h / 2);
+      return;
+    }
+    const lats = routePoints.map(p => p.lat), lngs = routePoints.map(p => p.lng);
+    const minLat = Math.min(...lats), maxLat = Math.max(...lats), minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+    const pad = 26;
+    const toXY = (p) => {
+      const px = maxLng === minLng ? x + w / 2 : x + pad + ((p.lng - minLng) / (maxLng - minLng)) * (w - pad * 2);
+      const py = maxLat === minLat ? y + h / 2 : y + pad + ((maxLat - p.lat) / (maxLat - minLat)) * (h - pad * 2);
+      return [px, py];
+    };
+    ctx.strokeStyle = "#a31621"; ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.beginPath();
+    routePoints.forEach((p, i) => { const [px, py] = toXY(p); if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
+    ctx.stroke();
+    const [sx, sy] = toXY(routePoints[0]); const [fx, fy] = toXY(routePoints[routePoints.length - 1]);
+    ctx.fillStyle = "#2e7d32"; ctx.beginPath(); ctx.arc(sx, sy, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 26px Arial"; ctx.textAlign = "center"; ctx.fillText("🏁", fx, fy + 9);
+  }
+
+  function createShareImage(runOverride = null, opts = {}) {
+    const runData = runOverride || savedRun || {
+      type: mode === "manual" ? "manual" : "gps",
+      distanceKm: Number(manualDistance || distanceKm || 0),
+      durationMin: Number(manualMinutes || Math.max(1, Math.round(elapsed / 60))),
+      points,
+      savedAt: new Date().toISOString(),
+      target: run.distance,
+      label: run.label,
+      taskKey
+    };
+    const dist = Number(runData.distanceKm || 0);
+    const mins = runData.durationMin ? Number(runData.durationMin) : null;
+    const timeText = mins ? `${mins} min` : "Not entered";
+    const paceVal = dist > 0 && mins ? mins / dist : null;
+    const paceText = paceVal ? `${Math.floor(paceVal)}:${String(Math.round((paceVal % 1) * 60)).padStart(2, "0")} /km` : "—";
+    const target = targetKm();
+    const achieved = !target || dist >= target;
+    const runType = runData.type === "gps" ? "🏃 GPS VERIFIED" : "✍️ MANUAL ENTRY";
+    const dateText = formatRunDateTime(runData.savedAt || new Date().toISOString());
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080; canvas.height = 1350;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fffaf2"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#a31621"; ctx.fillRect(0, 0, canvas.width, 230);
+    ctx.fillStyle = "#f4c542"; ctx.font = "bold 62px Arial"; ctx.textAlign = "center"; ctx.fillText("FINGALLIANS GAA", 540, 82);
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 42px Arial"; ctx.fillText("RUN COMPLETE", 540, 145);
+    ctx.font = "bold 30px Arial"; ctx.fillText(runType, 540, 190);
+
+    ctx.fillStyle = "#2b1717"; ctx.font = "bold 52px Arial"; ctx.fillText(player?.name || "Player", 540, 300);
+    ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 32px Arial"; ctx.fillText(`Week ${week} · ${runData.label || run.label} · Target ${runData.target || run.distance}`, 540, 350);
+    ctx.font = "bold 28px Arial"; ctx.fillText(dateText, 540, 390);
+
+    drawRoutePreview(ctx, runData.points || points, 80, 425, 920, 385);
+
+    [["DISTANCE", `${dist.toFixed(2)} km`], ["TIME", timeText], ["PACE", paceText]].forEach(([label, value], i) => {
+      const x = 80 + i * 315;
+      ctx.fillStyle = "#ffffff"; ctx.strokeStyle = "#ead7d7"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(x, 845, 285, 145, 28); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 24px Arial"; ctx.fillText(label, x + 142, 895);
+      ctx.fillStyle = "#a31621"; ctx.font = "bold 42px Arial"; ctx.fillText(value, x + 142, 950);
+    });
+
+    ctx.fillStyle = achieved ? "#2e7d32" : "#e65100";
+    ctx.beginPath(); ctx.roundRect(150, 1035, 780, 95, 48); ctx.fill();
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 38px Arial";
+    ctx.fillText(achieved ? "🏅 TARGET ACHIEVED" : "KEEP GOING - TARGET NOT REACHED", 540, 1097);
+
+    ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 28px Arial"; ctx.fillText("Summer Challenge 2026", 540, 1200);
+    ctx.font = "24px Arial"; ctx.fillText("Route details stay private on this device", 540, 1245);
+
+    const url = canvas.toDataURL("image/png");
+    setShareImageUrl(url);
+    if (runOverride) setSelectedRun({ ...runOverride, shareImageUrl: url });
+    if (!opts.silent) showToast?.("📸 Share image created");
+    return url;
+  }
+
+  async function shareGeneratedImage() {
+    const imageToShare = selectedRun?.shareImageUrl || shareImageUrl;
+    if (!imageToShare) return;
+    try {
+      const blob = await (await fetch(imageToShare)).blob();
+      const file = new File([blob], `fingallians-run-week-${week}.png`, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Fingallians Run Complete" });
+      } else {
+        const a = document.createElement("a");
+        a.href = imageToShare;
+        a.download = `fingallians-run-week-${week}.png`;
+        a.click();
+      }
+    } catch (e) {
+      console.error("Share image failed", e);
+      showToast?.("Image created — long press/save it below.");
+    }
   }
 
   const distanceKm = Number(totalDistanceKm(points).toFixed(2));
@@ -2246,21 +2687,20 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
       <div
         className={`run-chip${done?" done":""}`}
         style={!done && ps ? {background:ps.chip,color:ps.accent,borderColor:"transparent"} : {}}
-        onClick={(e)=>{ e.stopPropagation(); if (canToggle) setOpen(true); }}
+        onClick={(e)=>{
+          e.stopPropagation();
+          if (!canToggle) return;
+          if (done) removeCompletedRun();
+          else setOpen(true);
+        }}
       >
         {run.icon || "🏃"} {run.label}: {run.distance} {done?"✓":""}
       </div>
 
       {open && (
-        <div className="run-modal-backdrop" onClick={() => !tracking && setOpen(false)}>
+        <div className="run-modal-backdrop" onClick={closeRunModal}>
           <div className="run-modal" onClick={e=>e.stopPropagation()}>
-            <button className="run-modal-close" onClick={() => {
-              if (tracking) {
-                showToast?.("Finish or pause the run before closing.");
-                return;
-              }
-              setOpen(false);
-            }}>×</button>
+            <button className="run-modal-close" onClick={closeRunModal}>×</button>
 
             <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:"var(--g)",letterSpacing:"0.02em"}}>RUN LOGGER</div>
             <div style={{fontSize:12,color:"var(--muted)",lineHeight:1.45,margin:"4px 0 12px"}}>
@@ -2284,28 +2724,9 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
                   <div style={{background:"#f8f1f1",borderRadius:10,padding:8,textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"var(--g)"}}>{pace}</div><div style={{fontSize:10,color:"var(--muted)"}}>pace</div></div>
                 </div>
 
-                <div style={{height:190,borderRadius:14,background:"linear-gradient(135deg,#e8f5e9,#f8f1f1)",position:"relative",overflow:"hidden",marginBottom:10,border:"1px solid #e5d4d4"}}>
-                  {points.length > 1 ? (
-                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{position:"absolute",inset:0,width:"100%",height:"100%"}}>
-                      {(() => {
-                        const lats = points.map(p=>p.lat), lngs = points.map(p=>p.lng);
-                        const minLat=Math.min(...lats), maxLat=Math.max(...lats), minLng=Math.min(...lngs), maxLng=Math.max(...lngs);
-                        const pad=8;
-                        const coords = points.map(p => {
-                          const x = maxLng===minLng ? 50 : pad + ((p.lng-minLng)/(maxLng-minLng))*(100-pad*2);
-                          const y = maxLat===minLat ? 50 : pad + ((maxLat-p.lat)/(maxLat-minLat))*(100-pad*2);
-                          return `${x},${y}`;
-                        }).join(" ");
-                        return <polyline points={coords} fill="none" stroke="var(--g)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />;
-                      })()}
-                    </svg>
-                  ) : (
-                    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--muted)",fontWeight:800,fontSize:13,textAlign:"center",padding:20}}>
-                      Start GPS to draw your route preview here.
-                    </div>
-                  )}
-                  <div style={{position:"absolute",left:10,bottom:8,fontSize:10,color:"var(--muted)",fontWeight:800}}>Screenshot-friendly route preview</div>
-                  {targetHit && <div style={{position:"absolute",right:10,top:10,background:"#2e7d32",color:"#fff",borderRadius:999,padding:"5px 9px",fontSize:11,fontWeight:900}}>🏅 Target achieved</div>}
+                <div style={{position:"relative"}}>
+                  <RunRouteMap points={points} height={220} />
+                  {targetHit && <div style={{position:"absolute",right:10,top:10,background:"#2e7d32",color:"#fff",borderRadius:999,padding:"5px 9px",fontSize:11,fontWeight:900,zIndex:500}}>🏅 Target achieved</div>}
                 </div>
 
                 <div style={{display:"grid",gridTemplateColumns:tracking?"1fr 1fr":"1fr",gap:8}}>
@@ -2318,17 +2739,28 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
               </div>
             ) : (
               <div style={{display:"grid",gap:8}}>
-                <input value={manualDistance} onChange={e=>setManualDistance(e.target.value)} placeholder="Distance completed in km, e.g. 1.5" inputMode="decimal" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
-                <input value={manualMinutes} onChange={e=>setManualMinutes(e.target.value)} placeholder="Time taken in minutes, e.g. 12" inputMode="numeric" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
-                <input value={manualNote} onChange={e=>setManualNote(e.target.value)} placeholder="Optional note, e.g. ran with Dad" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
+                <label style={{fontSize:11,fontWeight:900,color:"var(--muted)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Distance completed in kilometres</label>
+                <input value={manualDistance} onChange={e=>setManualDistance(e.target.value)} placeholder="Example: 1.5" inputMode="decimal" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
+<label style={{fontSize:11,fontWeight:900,color:"var(--muted)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Optional note</label>
+                <input value={manualNote} onChange={e=>setManualNote(e.target.value)} placeholder="Example: ran with Dad" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
                 <button onClick={saveManual} style={{border:0,background:"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>✓ SAVE RUN</button>
               </div>
             )}
 
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12}}>
               <button onClick={shareWhatsApp} style={{border:"1px solid #25D366",background:"#e8f5e9",color:"#16783a",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>💬 Share text</button>
-              <button onClick={() => showToast?.("Take a screenshot of this screen and post it in WhatsApp.")} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>📸 Screenshot</button>
+              <button onClick={createShareImage} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>📸 Recreate image</button>
             </div>
+
+            {shareImageUrl && (
+              <div style={{marginTop:12,background:"#fff",border:"1px solid #ead7d7",borderRadius:14,padding:10}}>
+                <img src={shareImageUrl} alt="Generated run share card" style={{width:"100%",borderRadius:10,display:"block"}} />
+                <button onClick={shareGeneratedImage} style={{width:"100%",marginTop:10,border:0,background:"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>
+                  📤 Save / Share Image
+                </button>
+              </div>
+            )}
+
 
             {personalBest && (
               <div style={{marginTop:12,background:"#f8f1f1",borderRadius:12,padding:10,fontSize:12,color:"var(--ink)",fontWeight:800}}>
@@ -2336,19 +2768,22 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
               </div>
             )}
 
-            {history.length > 0 && (
-              <div style={{marginTop:12}}>
-                <div style={{fontSize:11,fontWeight:900,color:"var(--muted)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>Recent runs on this device</div>
-                <div style={{display:"grid",gap:6,maxHeight:110,overflow:"auto"}}>
-                  {history.slice(0,4).map((h,i)=>(
-                    <div key={i} style={{fontSize:12,background:"#fff",border:"1px solid #f0dede",borderRadius:10,padding:"7px 9px",display:"flex",justifyContent:"space-between",gap:8}}>
-                      <span>{h.distanceKm} km · {h.durationMin} min</span>
-                      <span style={{color:"var(--muted)"}}>{new Date(h.savedAt).toLocaleDateString()}</span>
-                    </div>
-                  ))}
+            {selectedRun && (
+              <div style={{marginTop:12,background:"#fff",border:"1px solid #ead7d7",borderRadius:14,padding:10}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:8}}>
+                  <div style={{fontSize:12,fontWeight:900,color:"var(--g)"}}>{selectedRun.deletedAt ? "Recently Deleted run image" : "Saved run image"}</div>
+                  <button onClick={() => setSelectedRun(null)} style={{border:0,background:"#f8f1f1",color:"var(--g)",borderRadius:999,width:28,height:28,fontWeight:900}}>×</button>
                 </div>
+                {selectedRun.shareImageUrl ? (
+                  <img src={selectedRun.shareImageUrl} alt="Saved run share card" style={{width:"100%",borderRadius:10,display:"block"}} />
+                ) : (
+                  <button onClick={() => createShareImage(selectedRun)} style={{width:"100%",border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>
+                    📸 Create image for this run
+                  </button>
+                )}
               </div>
             )}
+
           </div>
         </div>
       )}
@@ -2787,7 +3222,164 @@ function AdminProgressSnapshot({ allPlayers }) {
   );
 }
 
-function ProgressTab({ player, checks, isAdmin, allPlayers = [] }) {
+
+function formatLocalRunDateTime(ts) {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString("en-IE", { weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+  } catch (_) { return ""; }
+}
+
+function getRunHistoryKeys(player) {
+  const playerId = player?.id || "unknown";
+  return {
+    active: `runHistory:${APP_SQUAD}:${playerId}`,
+    deleted: `runHistoryDeleted:${APP_SQUAD}:${playerId}`,
+  };
+}
+
+function loadLocalRunHistory(player) {
+  try {
+    const keys = getRunHistoryKeys(player);
+    const active = JSON.parse(localStorage.getItem(keys.active) || "[]");
+    const deleted = JSON.parse(localStorage.getItem(keys.deleted) || "[]");
+    return { active: Array.isArray(active) ? active : [], deleted: Array.isArray(deleted) ? deleted : [] };
+  } catch (_) {
+    return { active: [], deleted: [] };
+  }
+}
+
+function RunHistoryProgressSection({ player, showToast }) {
+  const [runs, setRuns] = useState([]);
+  const [deletedRuns, setDeletedRuns] = useState([]);
+  const [selectedRun, setSelectedRun] = useState(null);
+  const keys = useMemo(() => getRunHistoryKeys(player), [player?.id]);
+
+  const reload = useCallback(() => {
+    const loaded = loadLocalRunHistory(player);
+    setRuns(loaded.active);
+    setDeletedRuns(loaded.deleted);
+  }, [player?.id]);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  function saveLists(nextRuns, nextDeleted) {
+    try {
+      localStorage.setItem(keys.active, JSON.stringify(nextRuns));
+      localStorage.setItem(keys.deleted, JSON.stringify(nextDeleted));
+    } catch (_) {}
+    setRuns(nextRuns);
+    setDeletedRuns(nextDeleted);
+  }
+
+  function moveToDeleted(runId) {
+    const run = runs.find(r => r.id === runId);
+    if (!run) return;
+    if (!window.confirm("Move this run to Recently Deleted? You can restore it from this Progress tab.")) return;
+    const nextRuns = runs.filter(r => r.id !== runId);
+    const deleted = { ...run, deletedAt: new Date().toISOString() };
+    const nextDeleted = [deleted, ...deletedRuns.filter(r => r.id !== runId)].slice(0, 30);
+    saveLists(nextRuns, nextDeleted);
+    if (selectedRun?.id === runId) setSelectedRun(null);
+    showToast?.("🗑️ Run moved to Recently Deleted");
+  }
+
+  function restoreRun(runId) {
+    const run = deletedRuns.find(r => r.id === runId);
+    if (!run) return;
+    const restored = { ...run };
+    delete restored.deletedAt;
+    const nextDeleted = deletedRuns.filter(r => r.id !== runId);
+    const nextRuns = [restored, ...runs.filter(r => r.id !== runId)].slice(0, 30);
+    saveLists(nextRuns, nextDeleted);
+    showToast?.("↩️ Run restored");
+  }
+
+  function deleteForever(runId) {
+    if (!window.confirm("Delete this run forever from this device? This cannot be undone.")) return;
+    const nextDeleted = deletedRuns.filter(r => r.id !== runId);
+    saveLists(runs, nextDeleted);
+    if (selectedRun?.id === runId) setSelectedRun(null);
+    showToast?.("🗑️ Run deleted forever");
+  }
+
+  const totalDistance = runs.reduce((sum, r) => sum + (Number(r.distanceKm) || 0), 0);
+
+  return (
+    <div style={{background:"white",borderRadius:14,padding:"14px",marginBottom:14,border:"1px solid #f0dede",width:"100%"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:10}}>
+        <div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,color:"var(--dark)",letterSpacing:"0.04em"}}>RUN RECORD</div>
+          <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Saved on this device only</div>
+        </div>
+        <button onClick={reload} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:999,padding:"6px 10px",fontSize:11,fontWeight:900,fontFamily:"inherit"}}>Refresh</button>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+        <div style={{background:"#f8f1f1",borderRadius:10,padding:"9px 8px",textAlign:"center"}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)",lineHeight:1}}>{runs.length}</div><div style={{fontSize:10,color:"var(--muted)"}}>runs saved</div></div>
+        <div style={{background:"#f8f1f1",borderRadius:10,padding:"9px 8px",textAlign:"center"}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)",lineHeight:1}}>{totalDistance.toFixed(2)}</div><div style={{fontSize:10,color:"var(--muted)"}}>km logged</div></div>
+        <div style={{background:"#f8f1f1",borderRadius:10,padding:"9px 8px",textAlign:"center"}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)",lineHeight:1}}>{deletedRuns.length}</div><div style={{fontSize:10,color:"var(--muted)"}}>deleted</div></div>
+      </div>
+
+      {runs.length === 0 ? (
+        <div style={{textAlign:"center",color:"var(--muted)",padding:"12px 0",fontSize:13}}>No runs saved on this device yet.</div>
+      ) : (
+        <div style={{display:"grid",gap:8,marginBottom:12}}>
+          {runs.slice(0,12).map((r,i)=>(
+            <div key={r.id || i} style={{border:"1px solid #f0dede",borderRadius:12,padding:"10px",display:"grid",gridTemplateColumns:"1fr auto",gap:8,alignItems:"center"}}>
+              <button onClick={() => setSelectedRun(r)} style={{border:0,background:"transparent",padding:0,textAlign:"left",fontFamily:"inherit",cursor:"pointer"}}>
+                <div style={{fontSize:13,fontWeight:900,color:"var(--dark)"}}>Week {r.week} · {r.type === "gps" ? "GPS run" : "Manual run"}</div>
+                <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{formatLocalRunDateTime(r.savedAt)} · {r.distanceKm} km{r.durationMin ? ` · ${r.durationMin} min` : ""}</div>
+              </button>
+              <button onClick={() => moveToDeleted(r.id)} style={{border:0,background:"#ffebee",color:"#c62828",borderRadius:999,width:30,height:30,fontWeight:900}}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{borderTop:"1px solid #f0dede",paddingTop:10}}>
+        <div style={{fontSize:11,fontWeight:900,color:"#c62828",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Recently Deleted</div>
+        {deletedRuns.length === 0 ? (
+          <div style={{fontSize:12,color:"var(--muted)",fontWeight:800}}>No recently deleted runs.</div>
+        ) : (
+          <div style={{display:"grid",gap:8}}>
+            {deletedRuns.slice(0,12).map((r,i)=>(
+              <div key={r.id || i} style={{background:"#fff7f7",border:"1px solid #ffd6d6",borderRadius:12,padding:"10px",display:"grid",gap:8}}>
+                <button onClick={() => setSelectedRun(r)} style={{border:0,background:"transparent",padding:0,textAlign:"left",fontFamily:"inherit",cursor:"pointer"}}>
+                  <div style={{fontSize:13,fontWeight:900,color:"var(--dark)"}}>Week {r.week} · {r.type === "gps" ? "GPS run" : "Manual run"}</div>
+                  <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{formatLocalRunDateTime(r.savedAt)} · {r.distanceKm} km{r.durationMin ? ` · ${r.durationMin} min` : ""}</div>
+                </button>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <button onClick={() => restoreRun(r.id)} style={{border:"1px solid #c8e6c9",background:"#e8f5e9",color:"#2e7d32",borderRadius:10,padding:"8px 10px",fontWeight:900,fontFamily:"inherit"}}>↩ Restore</button>
+                  <button onClick={() => deleteForever(r.id)} style={{border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",borderRadius:10,padding:"8px 10px",fontWeight:900,fontFamily:"inherit"}}>Delete Forever</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {selectedRun && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.72)",zIndex:10040,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={() => setSelectedRun(null)}>
+          <div style={{background:"white",borderRadius:18,width:"100%",maxWidth:520,maxHeight:"88vh",overflow:"auto",padding:14}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:10}}>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)"}}>RUN IMAGE</div>
+              <button onClick={() => setSelectedRun(null)} style={{border:0,background:"#f8f1f1",color:"var(--g)",borderRadius:999,width:32,height:32,fontWeight:900}}>×</button>
+            </div>
+            {selectedRun.shareImageUrl ? (
+              <img src={selectedRun.shareImageUrl} alt="Run share card" style={{width:"100%",borderRadius:12,display:"block"}} />
+            ) : (
+              <div style={{padding:20,textAlign:"center",color:"var(--muted)",fontSize:13}}>No share image saved for this run.</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function ProgressTab({ player, checks, isAdmin, allPlayers = [], showToast }) {
   if (isAdmin) return <AdminProgressSnapshot allPlayers={allPlayers} />;
   const [completions, setCompletions] = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -2958,6 +3550,7 @@ function ProgressTab({ player, checks, isAdmin, allPlayers = [] }) {
       </div>
 
       <ShareProgressButton player={player} checks={checks} />
+      <RunHistoryProgressSection player={player} showToast={showToast} />
       <div style={{background:"white",borderRadius:14,padding:"14px",border:"1px solid #f0dede",width:"100%"}}>
         <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,color:"var(--dark)",letterSpacing:"0.04em",marginBottom:12}}>ACTIVITY LOG</div>
         {loading && <div style={{textAlign:"center",color:"var(--muted)",padding:"16px 0",fontSize:13}}>Loading…</div>}
