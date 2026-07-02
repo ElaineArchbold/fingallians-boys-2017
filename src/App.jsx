@@ -1411,7 +1411,7 @@ export default function App() {
         )}
 
         {session && (player || isAdmin) && tab === "plan" && (
-          <PlanTab checks={checks} onToggle={toggleTask} player={player} showToast={showToast} />
+          <PlanTab checks={checks} onToggle={toggleTask} player={player} showToast={showToast} onGoProgress={() => setTab("progress")} />
         )}
 
         {session && (player || isAdmin) && tab === "progress" && (
@@ -2178,7 +2178,7 @@ function RunRouteMap({ points, height = 220 }) {
 }
 
 
-function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, showToast, player, ps }) {
+function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, showToast, player, ps, onGoProgress }) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState("gps");
   const [tracking, setTracking] = useState(false);
@@ -2191,17 +2191,16 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
   const [manualNote, setManualNote] = useState("");
   const [lastVoiceKm, setLastVoiceKm] = useState(0);
   const [history, setHistory] = useState([]);
-  const [deletedHistory, setDeletedHistory] = useState([]);
   const [savedRun, setSavedRun] = useState(null);
   const [shareImageUrl, setShareImageUrl] = useState(null);
   const [selectedRun, setSelectedRun] = useState(null);
+  const [completedRunPromptOpen, setCompletedRunPromptOpen] = useState(false);
   const watchRef = useRef(null);
   const timerRef = useRef(null);
   const pausedRef = useRef(false);
 
   const storageKey = `runLog:${APP_SQUAD}:${taskKey}`;
   const historyKey = `runHistory:${APP_SQUAD}:${player?.id || "unknown"}`;
-  const deletedHistoryKey = `runHistoryDeleted:${APP_SQUAD}:${player?.id || "unknown"}`;
 
   useEffect(() => {
     try {
@@ -2212,10 +2211,8 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
       }
       const h = JSON.parse(localStorage.getItem(historyKey) || "[]");
       setHistory(Array.isArray(h) ? h : []);
-      const deleted = JSON.parse(localStorage.getItem(deletedHistoryKey) || "[]");
-      setDeletedHistory(Array.isArray(deleted) ? deleted : []);
     } catch (_) {}
-  }, [storageKey, historyKey, deletedHistoryKey]);
+  }, [storageKey, historyKey]);
 
   useEffect(() => {
     if (open) {
@@ -2229,6 +2226,7 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
       setLastVoiceKm(0);
       setShareImageUrl(null);
       setSelectedRun(null);
+      setCompletedRunPromptOpen(false);
       resetManualFields();
     }
   }, [open, run.distance]);
@@ -2276,6 +2274,7 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     setLastVoiceKm(0);
     setShareImageUrl(null);
     setSelectedRun(null);
+    setCompletedRunPromptOpen(false);
     setMode("gps");
     resetManualFields();
     setOpen(false);
@@ -2304,98 +2303,16 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     try {
       const runEntry = {
         ...entry,
-        id: entry.id || `${entry.taskKey || taskKey}:${Date.now()}`,
-        savedAt: entry.savedAt || new Date().toISOString()
+        id: entry.id || `latest:${player?.id || "unknown"}`,
+        savedAt: entry.savedAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
-      const next = [runEntry, ...history.filter(h => h.id !== runEntry.id)].slice(0, 20);
+      const next = [runEntry];
       setHistory(next);
       localStorage.setItem(historyKey, JSON.stringify(next));
       return runEntry;
     } catch (_) {
       return entry;
-    }
-  }
-
-  function deleteRunHistory(runId, runTaskKey) {
-    try {
-      const runToDelete = history.find(h => h.id === runId);
-      if (!runToDelete) return;
-
-      const ok = window.confirm(
-        "Remove this run from history? You can restore it from Recently Deleted."
-      );
-      if (!ok) return;
-
-      const nextHistory = history.filter(h => h.id !== runId);
-      const deletedEntry = { ...runToDelete, deletedAt: new Date().toISOString() };
-      const nextDeleted = [deletedEntry, ...deletedHistory.filter(h => h.id !== runId)].slice(0, 20);
-
-      setHistory(nextHistory);
-      setDeletedHistory(nextDeleted);
-      localStorage.setItem(historyKey, JSON.stringify(nextHistory));
-      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
-
-      if (selectedRun?.id === runId) setSelectedRun(null);
-
-      showToast?.("🗑️ Moved to Recently Deleted");
-    } catch (e) {
-      console.error("Move to Recently Deleted failed", e);
-      showToast?.("Could not remove that run");
-    }
-  }
-
-  function restoreDeletedRun(runId) {
-    try {
-      const runToRestore = deletedHistory.find(h => h.id === runId);
-      if (!runToRestore) return;
-
-      const restored = { ...runToRestore };
-      delete restored.deletedAt;
-
-      const nextDeleted = deletedHistory.filter(h => h.id !== runId);
-      const nextHistory = [restored, ...history.filter(h => h.id !== runId)].slice(0, 20);
-
-      setDeletedHistory(nextDeleted);
-      setHistory(nextHistory);
-      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
-      localStorage.setItem(historyKey, JSON.stringify(nextHistory));
-
-      if (restored.taskKey === taskKey) {
-        localStorage.setItem(storageKey, JSON.stringify(restored));
-        setSavedRun(restored);
-        setShareImageUrl(restored.shareImageUrl || null);
-      }
-
-      showToast?.("↩️ Run restored");
-    } catch (e) {
-      console.error("Restore run failed", e);
-      showToast?.("Could not restore that run");
-    }
-  }
-
-  function deleteRunForever(runId) {
-    try {
-      const ok = window.confirm("Delete this run forever from this device? This cannot be undone.");
-      if (!ok) return;
-
-      const runToDelete = deletedHistory.find(h => h.id === runId);
-      const nextDeleted = deletedHistory.filter(h => h.id !== runId);
-
-      setDeletedHistory(nextDeleted);
-      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
-
-      if (selectedRun?.id === runId) setSelectedRun(null);
-
-      if (runToDelete?.taskKey === taskKey) {
-        localStorage.removeItem(storageKey);
-        setSavedRun(null);
-        setShareImageUrl(null);
-      }
-
-      showToast?.("🗑️ Run deleted forever");
-    } catch (e) {
-      console.error("Delete forever failed", e);
-      showToast?.("Could not delete that run");
     }
   }
 
@@ -2407,12 +2324,8 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     if (!ok) return;
 
     try {
-      const next = history.filter(h => h.taskKey !== taskKey);
-      const nextDeleted = deletedHistory.filter(h => h.taskKey !== taskKey);
-      setHistory(next);
-      setDeletedHistory(nextDeleted);
-      localStorage.setItem(historyKey, JSON.stringify(next));
-      localStorage.setItem(deletedHistoryKey, JSON.stringify(nextDeleted));
+      setHistory([]);
+      localStorage.setItem(historyKey, JSON.stringify([]));
       localStorage.removeItem(storageKey);
       setSavedRun(null);
       setSelectedRun(null);
@@ -2514,11 +2427,10 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
       savedAt: new Date().toISOString()
     };
     const imageUrl = createShareImage(saved, { silent: true });
-    const savedWithImage = { ...saved, shareImageUrl: imageUrl };
+    const savedWithImage = saveHistory({ ...saved, shareImageUrl: imageUrl });
     setSavedRun(savedWithImage);
     setShareImageUrl(imageUrl);
     try { localStorage.setItem(storageKey, JSON.stringify(savedWithImage)); } catch (_) {}
-    saveHistory(savedWithImage);
     setManualDistance(String(distanceKm));
     setManualMinutes(String(durationMin));
     const target = targetKm();
@@ -2549,11 +2461,10 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
       savedAt: new Date().toISOString()
     };
     const imageUrl = createShareImage(saved, { silent: true });
-    const savedWithImage = { ...saved, shareImageUrl: imageUrl };
+    const savedWithImage = saveHistory({ ...saved, shareImageUrl: imageUrl });
     setSavedRun(savedWithImage);
     setShareImageUrl(imageUrl);
     try { localStorage.setItem(storageKey, JSON.stringify(savedWithImage)); } catch (_) {}
-    saveHistory(savedWithImage);
     const target = targetKm();
     const meetsTarget = !target || distanceKm >= target;
     showToast?.(meetsTarget
@@ -2562,11 +2473,6 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     if (meetsTarget && !done && canToggle) onToggle(taskKey, PTS.run, `${run.icon || "🏃"} ${run.label} (${run.distance})`);
     resetManualFields();
   }
-  function shareWhatsApp() {
-    const msg = `${player?.name || "Player"} completed ${manualDistance || distanceKm} km${manualMinutes ? ` in ${manualMinutes} min` : ""} for Week ${week} ${run.label}! 🏃`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
-  }
-
   function drawRoutePreview(ctx, routePoints, x, y, w, h) {
     ctx.fillStyle = "#e8f5e9";
     ctx.fillRect(x, y, w, h);
@@ -2619,7 +2525,7 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     const dateText = formatRunDateTime(runData.savedAt || new Date().toISOString());
 
     const canvas = document.createElement("canvas");
-    canvas.width = 1080; canvas.height = 1350;
+    canvas.width = 1080; canvas.height = 1920;
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "#fffaf2"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#a31621"; ctx.fillRect(0, 0, canvas.width, 230);
@@ -2631,23 +2537,23 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 32px Arial"; ctx.fillText(`Week ${week} · ${runData.label || run.label} · Target ${runData.target || run.distance}`, 540, 350);
     ctx.font = "bold 28px Arial"; ctx.fillText(dateText, 540, 390);
 
-    drawRoutePreview(ctx, runData.points || points, 80, 425, 920, 385);
+    drawRoutePreview(ctx, runData.points || points, 80, 425, 920, 640);
 
     [["DISTANCE", `${dist.toFixed(2)} km`], ["TIME", timeText], ["PACE", paceText]].forEach(([label, value], i) => {
       const x = 80 + i * 315;
       ctx.fillStyle = "#ffffff"; ctx.strokeStyle = "#ead7d7"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.roundRect(x, 845, 285, 145, 28); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 24px Arial"; ctx.fillText(label, x + 142, 895);
-      ctx.fillStyle = "#a31621"; ctx.font = "bold 42px Arial"; ctx.fillText(value, x + 142, 950);
+      ctx.beginPath(); ctx.roundRect(x, 1115, 285, 145, 28); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 24px Arial"; ctx.fillText(label, x + 142, 1165);
+      ctx.fillStyle = "#a31621"; ctx.font = "bold 42px Arial"; ctx.fillText(value, x + 142, 1220);
     });
 
     ctx.fillStyle = achieved ? "#2e7d32" : "#e65100";
-    ctx.beginPath(); ctx.roundRect(150, 1035, 780, 95, 48); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(150, 1315, 780, 95, 48); ctx.fill();
     ctx.fillStyle = "#ffffff"; ctx.font = "bold 38px Arial";
-    ctx.fillText(achieved ? "🏅 TARGET ACHIEVED" : "KEEP GOING - TARGET NOT REACHED", 540, 1097);
+    ctx.fillText(achieved ? "🏅 TARGET ACHIEVED" : "KEEP GOING - TARGET NOT REACHED", 540, 1377);
 
-    ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 28px Arial"; ctx.fillText("Summer Challenge 2026", 540, 1200);
-    ctx.font = "24px Arial"; ctx.fillText("Route details stay private on this device", 540, 1245);
+    ctx.fillStyle = "#7c5d5d"; ctx.font = "bold 28px Arial"; ctx.fillText("Summer Challenge 2026", 540, 1525);
+    ctx.font = "24px Arial"; ctx.fillText("Route details stay private on this device", 540, 1570);
 
     const url = canvas.toDataURL("image/png");
     setShareImageUrl(url);
@@ -2656,9 +2562,12 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
     return url;
   }
 
-  async function shareGeneratedImage() {
-    const imageToShare = selectedRun?.shareImageUrl || shareImageUrl;
-    if (!imageToShare) return;
+  async function shareGeneratedImage(imageOverride = null) {
+    const imageToShare = imageOverride || selectedRun?.shareImageUrl || shareImageUrl;
+    if (!imageToShare) {
+      showToast?.("Create or save a run first, then share the image.");
+      return;
+    }
     try {
       const blob = await (await fetch(imageToShare)).blob();
       const file = new File([blob], `fingallians-run-week-${week}.png`, { type: "image/png" });
@@ -2669,11 +2578,17 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
         a.href = imageToShare;
         a.download = `fingallians-run-week-${week}.png`;
         a.click();
+        showToast?.("Image saved. You can share it from your photos/files.");
       }
     } catch (e) {
       console.error("Share image failed", e);
       showToast?.("Image created — long press/save it below.");
     }
+  }
+
+  async function shareSaveImage(runOverride = null) {
+    const image = runOverride?.shareImageUrl || shareImageUrl || createShareImage(runOverride || savedRun || null, { silent: true });
+    await shareGeneratedImage(image);
   }
 
   const distanceKm = Number(totalDistanceKm(points).toFixed(2));
@@ -2690,12 +2605,51 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
         onClick={(e)=>{
           e.stopPropagation();
           if (!canToggle) return;
-          if (done) removeCompletedRun();
+          if (done) setCompletedRunPromptOpen(true);
           else setOpen(true);
         }}
       >
         {run.icon || "🏃"} {run.label}: {run.distance} {done?"✓":""}
       </div>
+
+      {completedRunPromptOpen && (
+        <div className="run-modal-backdrop" onClick={() => setCompletedRunPromptOpen(false)}>
+          <div className="run-modal" style={{maxWidth:420}} onClick={e=>e.stopPropagation()}>
+            <button className="run-modal-close" onClick={() => setCompletedRunPromptOpen(false)}>×</button>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:26,color:"var(--g)",letterSpacing:"0.02em"}}>RUN ALREADY COMPLETED</div>
+            <div style={{fontSize:13,color:"var(--muted)",lineHeight:1.45,margin:"6px 0 14px"}}>
+              What would you like to do with this completed run?
+            </div>
+            <div style={{display:"grid",gap:8}}>
+              <button
+                onClick={() => {
+                  setCompletedRunPromptOpen(false);
+                  onGoProgress?.();
+                  showToast?.("Need the screenshot? Open the Progress tab to view and share your last saved run.");
+                }}
+                style={{border:0,background:"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}
+              >
+                📸 View / Share Screenshot
+              </button>
+              <button
+                onClick={() => {
+                  setCompletedRunPromptOpen(false);
+                  removeCompletedRun();
+                }}
+                style={{border:"1px solid #ead7d7",background:"#fff",color:"#a31621",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}
+              >
+                ✕ Remove Run
+              </button>
+              <button
+                onClick={() => setCompletedRunPromptOpen(false)}
+                style={{border:0,background:"#f8f1f1",color:"var(--muted)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {open && (
         <div className="run-modal-backdrop" onClick={closeRunModal}>
@@ -2747,16 +2701,15 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
               </div>
             )}
 
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12}}>
-              <button onClick={shareWhatsApp} style={{border:"1px solid #25D366",background:"#e8f5e9",color:"#16783a",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>💬 Share text</button>
-              <button onClick={createShareImage} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>📸 Recreate image</button>
+            <div style={{display:"grid",gridTemplateColumns:"1fr",gap:8,marginTop:12}}>
+              <button onClick={() => shareSaveImage()} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>📸 Share / Save Image</button>
             </div>
 
             {shareImageUrl && (
               <div style={{marginTop:12,background:"#fff",border:"1px solid #ead7d7",borderRadius:14,padding:10}}>
                 <img src={shareImageUrl} alt="Generated run share card" style={{width:"100%",borderRadius:10,display:"block"}} />
-                <button onClick={shareGeneratedImage} style={{width:"100%",marginTop:10,border:0,background:"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>
-                  📤 Save / Share Image
+                <button onClick={() => shareGeneratedImage()} style={{width:"100%",marginTop:10,border:0,background:"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>
+                  📤 Share / Save Image
                 </button>
               </div>
             )}
@@ -2771,14 +2724,14 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
             {selectedRun && (
               <div style={{marginTop:12,background:"#fff",border:"1px solid #ead7d7",borderRadius:14,padding:10}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:8}}>
-                  <div style={{fontSize:12,fontWeight:900,color:"var(--g)"}}>{selectedRun.deletedAt ? "Recently Deleted run image" : "Saved run image"}</div>
+                  <div style={{fontSize:12,fontWeight:900,color:"var(--g)"}}>{"Saved run image"}</div>
                   <button onClick={() => setSelectedRun(null)} style={{border:0,background:"#f8f1f1",color:"var(--g)",borderRadius:999,width:28,height:28,fontWeight:900}}>×</button>
                 </div>
                 {selectedRun.shareImageUrl ? (
                   <img src={selectedRun.shareImageUrl} alt="Saved run share card" style={{width:"100%",borderRadius:10,display:"block"}} />
                 ) : (
-                  <button onClick={() => createShareImage(selectedRun)} style={{width:"100%",border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>
-                    📸 Create image for this run
+                  <button onClick={() => shareSaveImage(selectedRun)} style={{width:"100%",border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>
+                    📸 Share / Save Image
                   </button>
                 )}
               </div>
@@ -2792,7 +2745,7 @@ function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, 
 }
 
 
-function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToast }) {
+function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToast, onGoProgress }) {
   const [expandedSkill, setExpandedSkill] = useState(null);
   const [expandedSquad, setExpandedSquad] = useState(false);
   const [playingVideo, setPlayingVideo]   = useState(null);
@@ -2828,6 +2781,7 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
                     showToast={showToast}
                     player={player}
                     ps={ps}
+                    onGoProgress={onGoProgress}
                   />
                 ) : (
                   <div key={i} className={`run-chip${done?" done":""}`}
@@ -3044,7 +2998,7 @@ function VideoEmbed({ ytId, playing, onPlay, dark }) {
   );
 }
 
-function PlanTab({ checks, onToggle, player, showToast }) {
+function PlanTab({ checks, onToggle, player, showToast, onGoProgress }) {
   return (
     <div className="wk-detail">
       <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,color:"var(--g)",marginBottom:12,letterSpacing:"0.02em"}}>
@@ -3057,7 +3011,7 @@ function PlanTab({ checks, onToggle, player, showToast }) {
         const pct = Math.round((wP/wM)*100);
         return (
           <div key={i} style={{marginBottom:24}}>
-            <WeekDetail w={w} ps={ps} pct={pct} wPts={wP} wMax={wM} checks={checks} onToggle={onToggle} player={player} showToast={showToast} />
+            <WeekDetail w={w} ps={ps} pct={pct} wPts={wP} wMax={wM} checks={checks} onToggle={onToggle} player={player} showToast={showToast} onGoProgress={onGoProgress} />
           </div>
         );
       })}
@@ -3234,7 +3188,6 @@ function getRunHistoryKeys(player) {
   const playerId = player?.id || "unknown";
   return {
     active: `runHistory:${APP_SQUAD}:${playerId}`,
-    deleted: `runHistoryDeleted:${APP_SQUAD}:${playerId}`,
   };
 }
 
@@ -3242,134 +3195,102 @@ function loadLocalRunHistory(player) {
   try {
     const keys = getRunHistoryKeys(player);
     const active = JSON.parse(localStorage.getItem(keys.active) || "[]");
-    const deleted = JSON.parse(localStorage.getItem(keys.deleted) || "[]");
-    return { active: Array.isArray(active) ? active : [], deleted: Array.isArray(deleted) ? deleted : [] };
+    if (!Array.isArray(active)) return [];
+    return active.slice(0, 1);
   } catch (_) {
-    return { active: [], deleted: [] };
+    return [];
   }
 }
 
 function RunHistoryProgressSection({ player, showToast }) {
   const [runs, setRuns] = useState([]);
-  const [deletedRuns, setDeletedRuns] = useState([]);
   const [selectedRun, setSelectedRun] = useState(null);
-  const keys = useMemo(() => getRunHistoryKeys(player), [player?.id]);
 
   const reload = useCallback(() => {
     const loaded = loadLocalRunHistory(player);
-    setRuns(loaded.active);
-    setDeletedRuns(loaded.deleted);
+    setRuns(loaded);
+    setSelectedRun(null);
+    showToast?.("Progress refreshed");
+  }, [player?.id, showToast]);
+
+  useEffect(() => {
+    const loaded = loadLocalRunHistory(player);
+    setRuns(loaded);
   }, [player?.id]);
 
-  useEffect(() => { reload(); }, [reload]);
+  const latestRun = runs[0] || null;
+  const totalDistance = latestRun ? Number(latestRun.distanceKm) || 0 : 0;
 
-  function saveLists(nextRuns, nextDeleted) {
+  async function shareSavedRunImage(run) {
+    const imageToShare = run?.shareImageUrl;
+    if (!imageToShare) {
+      showToast?.("No screenshot is saved for this run yet. Save the run again to create one.");
+      return;
+    }
     try {
-      localStorage.setItem(keys.active, JSON.stringify(nextRuns));
-      localStorage.setItem(keys.deleted, JSON.stringify(nextDeleted));
-    } catch (_) {}
-    setRuns(nextRuns);
-    setDeletedRuns(nextDeleted);
+      const blob = await (await fetch(imageToShare)).blob();
+      const file = new File([blob], `fingallians-run-week-${run.week || "run"}.png`, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Fingallians Run Complete" });
+      } else {
+        const a = document.createElement("a");
+        a.href = imageToShare;
+        a.download = `fingallians-run-week-${run.week || "run"}.png`;
+        a.click();
+        showToast?.("Image saved. You can share it from your photos/files.");
+      }
+    } catch (e) {
+      console.error("Share saved run image failed", e);
+      showToast?.("Open the screenshot, then long press/save it.");
+    }
   }
-
-  function moveToDeleted(runId) {
-    const run = runs.find(r => r.id === runId);
-    if (!run) return;
-    if (!window.confirm("Move this run to Recently Deleted? You can restore it from this Progress tab.")) return;
-    const nextRuns = runs.filter(r => r.id !== runId);
-    const deleted = { ...run, deletedAt: new Date().toISOString() };
-    const nextDeleted = [deleted, ...deletedRuns.filter(r => r.id !== runId)].slice(0, 30);
-    saveLists(nextRuns, nextDeleted);
-    if (selectedRun?.id === runId) setSelectedRun(null);
-    showToast?.("🗑️ Run moved to Recently Deleted");
-  }
-
-  function restoreRun(runId) {
-    const run = deletedRuns.find(r => r.id === runId);
-    if (!run) return;
-    const restored = { ...run };
-    delete restored.deletedAt;
-    const nextDeleted = deletedRuns.filter(r => r.id !== runId);
-    const nextRuns = [restored, ...runs.filter(r => r.id !== runId)].slice(0, 30);
-    saveLists(nextRuns, nextDeleted);
-    showToast?.("↩️ Run restored");
-  }
-
-  function deleteForever(runId) {
-    if (!window.confirm("Delete this run forever from this device? This cannot be undone.")) return;
-    const nextDeleted = deletedRuns.filter(r => r.id !== runId);
-    saveLists(runs, nextDeleted);
-    if (selectedRun?.id === runId) setSelectedRun(null);
-    showToast?.("🗑️ Run deleted forever");
-  }
-
-  const totalDistance = runs.reduce((sum, r) => sum + (Number(r.distanceKm) || 0), 0);
 
   return (
     <div style={{background:"white",borderRadius:14,padding:"14px",marginBottom:14,border:"1px solid #f0dede",width:"100%"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:10}}>
         <div>
-          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,color:"var(--dark)",letterSpacing:"0.04em"}}>RUN RECORD</div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,color:"var(--dark)",letterSpacing:"0.04em"}}>LAST SAVED RUN</div>
           <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>Saved on this device only</div>
         </div>
         <button onClick={reload} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:999,padding:"6px 10px",fontSize:11,fontWeight:900,fontFamily:"inherit"}}>Refresh</button>
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-        <div style={{background:"#f8f1f1",borderRadius:10,padding:"9px 8px",textAlign:"center"}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)",lineHeight:1}}>{runs.length}</div><div style={{fontSize:10,color:"var(--muted)"}}>runs saved</div></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+        <div style={{background:"#f8f1f1",borderRadius:10,padding:"9px 8px",textAlign:"center"}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)",lineHeight:1}}>{latestRun ? 1 : 0}</div><div style={{fontSize:10,color:"var(--muted)"}}>run saved</div></div>
         <div style={{background:"#f8f1f1",borderRadius:10,padding:"9px 8px",textAlign:"center"}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)",lineHeight:1}}>{totalDistance.toFixed(2)}</div><div style={{fontSize:10,color:"var(--muted)"}}>km logged</div></div>
-        <div style={{background:"#f8f1f1",borderRadius:10,padding:"9px 8px",textAlign:"center"}}><div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)",lineHeight:1}}>{deletedRuns.length}</div><div style={{fontSize:10,color:"var(--muted)"}}>deleted</div></div>
       </div>
 
-      {runs.length === 0 ? (
-        <div style={{textAlign:"center",color:"var(--muted)",padding:"12px 0",fontSize:13}}>No runs saved on this device yet.</div>
+      {!latestRun ? (
+        <div style={{textAlign:"center",color:"var(--muted)",padding:"12px 0",fontSize:13}}>No run saved on this device yet.</div>
       ) : (
         <div style={{display:"grid",gap:8,marginBottom:12}}>
-          {runs.slice(0,12).map((r,i)=>(
-            <div key={r.id || i} style={{border:"1px solid #f0dede",borderRadius:12,padding:"10px",display:"grid",gridTemplateColumns:"1fr auto",gap:8,alignItems:"center"}}>
-              <button onClick={() => setSelectedRun(r)} style={{border:0,background:"transparent",padding:0,textAlign:"left",fontFamily:"inherit",cursor:"pointer"}}>
-                <div style={{fontSize:13,fontWeight:900,color:"var(--dark)"}}>Week {r.week} · {r.type === "gps" ? "GPS run" : "Manual run"}</div>
-                <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{formatLocalRunDateTime(r.savedAt)} · {r.distanceKm} km{r.durationMin ? ` · ${r.durationMin} min` : ""}</div>
-              </button>
-              <button onClick={() => moveToDeleted(r.id)} style={{border:0,background:"#ffebee",color:"#c62828",borderRadius:999,width:30,height:30,fontWeight:900}}>×</button>
-            </div>
-          ))}
+          <div style={{border:"1px solid #f0dede",borderRadius:12,padding:"10px",display:"grid",gridTemplateColumns:"1fr auto auto",gap:8,alignItems:"center"}}>
+            <button onClick={() => setSelectedRun(latestRun)} style={{border:0,background:"transparent",padding:0,textAlign:"left",fontFamily:"inherit",cursor:"pointer"}}>
+              <div style={{fontSize:13,fontWeight:900,color:"var(--dark)"}}>Week {latestRun.week} · {latestRun.type === "gps" ? "GPS run" : "Manual run"}</div>
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{formatLocalRunDateTime(latestRun.savedAt)} · {latestRun.distanceKm} km{latestRun.durationMin ? ` · ${latestRun.durationMin} min` : ""}</div>
+            </button>
+            <button onClick={() => setSelectedRun(latestRun)} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:999,padding:"7px 10px",fontSize:11,fontWeight:900,fontFamily:"inherit"}}>View</button>
+            <button onClick={() => shareSavedRunImage(latestRun)} style={{border:0,background:"var(--g)",color:"#fff",borderRadius:999,padding:"7px 10px",fontSize:11,fontWeight:900,fontFamily:"inherit"}}>Share / Save</button>
+          </div>
         </div>
       )}
-
-      <div style={{borderTop:"1px solid #f0dede",paddingTop:10}}>
-        <div style={{fontSize:11,fontWeight:900,color:"#c62828",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Recently Deleted</div>
-        {deletedRuns.length === 0 ? (
-          <div style={{fontSize:12,color:"var(--muted)",fontWeight:800}}>No recently deleted runs.</div>
-        ) : (
-          <div style={{display:"grid",gap:8}}>
-            {deletedRuns.slice(0,12).map((r,i)=>(
-              <div key={r.id || i} style={{background:"#fff7f7",border:"1px solid #ffd6d6",borderRadius:12,padding:"10px",display:"grid",gap:8}}>
-                <button onClick={() => setSelectedRun(r)} style={{border:0,background:"transparent",padding:0,textAlign:"left",fontFamily:"inherit",cursor:"pointer"}}>
-                  <div style={{fontSize:13,fontWeight:900,color:"var(--dark)"}}>Week {r.week} · {r.type === "gps" ? "GPS run" : "Manual run"}</div>
-                  <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>{formatLocalRunDateTime(r.savedAt)} · {r.distanceKm} km{r.durationMin ? ` · ${r.durationMin} min` : ""}</div>
-                </button>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                  <button onClick={() => restoreRun(r.id)} style={{border:"1px solid #c8e6c9",background:"#e8f5e9",color:"#2e7d32",borderRadius:10,padding:"8px 10px",fontWeight:900,fontFamily:"inherit"}}>↩ Restore</button>
-                  <button onClick={() => deleteForever(r.id)} style={{border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",borderRadius:10,padding:"8px 10px",fontWeight:900,fontFamily:"inherit"}}>Delete Forever</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {selectedRun && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.72)",zIndex:10040,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={() => setSelectedRun(null)}>
           <div style={{background:"white",borderRadius:18,width:"100%",maxWidth:520,maxHeight:"88vh",overflow:"auto",padding:14}} onClick={e=>e.stopPropagation()}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:10}}>
-              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)"}}>RUN IMAGE</div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:22,color:"var(--g)"}}>SHARE IMAGE</div>
               <button onClick={() => setSelectedRun(null)} style={{border:0,background:"#f8f1f1",color:"var(--g)",borderRadius:999,width:32,height:32,fontWeight:900}}>×</button>
             </div>
             {selectedRun.shareImageUrl ? (
-              <img src={selectedRun.shareImageUrl} alt="Run share card" style={{width:"100%",borderRadius:12,display:"block"}} />
+              <>
+                <img src={selectedRun.shareImageUrl} alt="Run share card" style={{width:"100%",borderRadius:12,display:"block"}} />
+                <button onClick={() => shareSavedRunImage(selectedRun)} style={{width:"100%",marginTop:10,border:0,background:"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>
+                  📤 Share / Save Image
+                </button>
+              </>
             ) : (
-              <div style={{padding:20,textAlign:"center",color:"var(--muted)",fontSize:13}}>No share image saved for this run.</div>
+              <div style={{padding:20,textAlign:"center",color:"var(--muted)",fontSize:13}}>No screenshot saved for this run yet. Save the run again to create one.</div>
             )}
           </div>
         </div>
@@ -3380,7 +3301,6 @@ function RunHistoryProgressSection({ player, showToast }) {
 
 
 function ProgressTab({ player, checks, isAdmin, allPlayers = [], showToast }) {
-  if (isAdmin) return <AdminProgressSnapshot allPlayers={allPlayers} />;
   const [completions, setCompletions] = useState([]);
   const [loading, setLoading]         = useState(true);
 
@@ -3464,6 +3384,8 @@ function ProgressTab({ player, checks, isAdmin, allPlayers = [], showToast }) {
   };
 
   const maxWeekActivity = Math.max(...weeklyData.map(w => w.maxPoss), 1);
+
+  if (isAdmin) return <AdminProgressSnapshot allPlayers={allPlayers} />;
 
   if (!player) return (
     <div className="home-wrap" style={{textAlign:"center",paddingTop:40,color:"var(--muted)"}}>
