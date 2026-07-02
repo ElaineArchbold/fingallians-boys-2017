@@ -765,13 +765,21 @@ function ChildVersionComingSoon({ player, showToast }) {
 
 function ChildSimpleView({ player, checks, playerLoaded, pts, weeksDone, showToast, onToggle }) {
   const currentWeekIndex = Math.min(Math.max(Math.floor((new Date() - new Date("2026-06-29")) / (7*24*60*60*1000)), 0), 7);
-  const w = WEEKS[currentWeekIndex];
+  const [activeWk, setActiveWk] = useState(currentWeekIndex);
+
+  useEffect(() => {
+    setActiveWk(currentWeekIndex);
+  }, [currentWeekIndex]);
+
+  const w = WEEKS[activeWk];
+  const currentW = WEEKS[currentWeekIndex];
   const ps = PHASE_STYLE[w.phase];
   const wPts = weekPts(w, checks);
   const wMax = weekMaxPts(w);
   const pct = Math.round((wPts / wMax) * 100);
   const maxPossible = WEEKS.reduce((a,wk) => a + weekMaxPts(wk), 0);
   const totalPct = Math.round((pts / maxPossible) * 100);
+  const isCurrentWeek = activeWk === currentWeekIndex;
 
   if (!playerLoaded) {
     return <div className="loader"><div className="spinner"/><span>Loading your app…</span></div>;
@@ -799,7 +807,7 @@ function ChildSimpleView({ player, checks, playerLoaded, pts, weeksDone, showToa
         </div>
         <h2>THIS WEEK'S CHALLENGE</h2>
         <div className="player-name">👤 {player.name}</div>
-        <div style={{fontSize:13,opacity:0.86,marginTop:6}}>Week {w.week} of 8 · {w.dates}</div>
+        <div style={{fontSize:13,opacity:0.86,marginTop:6}}>Week {currentW.week} of 8 · {currentW.dates}</div>
         <div className="pts-row">
           <div className="pts-box"><div className="num">{pts}</div><div className="lbl2">Total Points</div></div>
           <div className="pts-box"><div className="num">{totalPct}%</div><div className="lbl2">Progress</div></div>
@@ -809,14 +817,10 @@ function ChildSimpleView({ player, checks, playerLoaded, pts, weeksDone, showToa
 
       <div style={{background:"white",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:"14px 16px",marginBottom:12}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <strong style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,color:"var(--g)"}}>This week</strong>
-          <span style={{fontSize:13,color:"var(--mid)"}}>{wPts}/{wMax} pts</span>
+          <strong style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,color:"var(--g)"}}>{isCurrentWeek ? "This week" : "Catch-up week"}</strong>
+          <span style={{fontSize:13,color:"var(--mid)"}}>Week {w.week} · {wPts}/{wMax} pts</span>
         </div>
         <div className="prog"><div style={{width:`${pct}%`,background:ps.accent}} /></div>
-      </div>
-
-      <div style={{background:"white",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:"12px 14px",marginBottom:12,textAlign:"center",fontSize:13,color:"var(--mid)",lineHeight:1.6}}>
-        Tap an activity to mark it complete. It will sync back to the parent version automatically.
       </div>
 
       <WeekDetail
@@ -830,6 +834,35 @@ function ChildSimpleView({ player, checks, playerLoaded, pts, weeksDone, showToa
         player={player}
         showToast={showToast}
       />
+
+      <div style={{background:"white",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:"12px 14px",marginTop:12,marginBottom:12,textAlign:"center",fontSize:13,color:"var(--mid)",lineHeight:1.6}}>
+        Tap an activity to mark it complete. It will sync back to the parent version automatically.
+      </div>
+
+      <div style={{background:"white",borderRadius:"var(--radius)",boxShadow:"var(--shadow)",padding:"14px 16px",marginBottom:12}}>
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,color:"var(--g)",marginBottom:6,letterSpacing:"0.02em"}}>
+          Catch up on previous weeks
+        </div>
+        <div style={{background:"#fff9e8",border:"1px solid var(--gold)",borderRadius:12,padding:"10px 12px",marginBottom:12,fontSize:13,color:"var(--dark)",lineHeight:1.45,textAlign:"center"}}>
+          Missed a week? No problem — you can go back and complete unfinished activities from previous weeks.
+        </div>
+        <div className="week-grid" style={{marginBottom:0}}>
+          {WEEKS.slice(0, currentWeekIndex + 1).map((wk,i) => {
+            const p2 = weekPts(wk, checks);
+            const max = weekMaxPts(wk);
+            const ps2 = PHASE_STYLE[wk.phase];
+            return (
+              <div key={i} className={`wk-tile${activeWk===i?" active":""}`}
+                style={activeWk===i?{borderColor:ps2.accent}:{}}
+                onClick={() => setActiveWk(i)}>
+                <div className="wn" style={{color:ps2.accent}}>W{wk.week}</div>
+                <div className="wp">{wk.dates.split("–")[0]}</div>
+                <div className="wbar"><div className="wbar-fill" style={{width:`${Math.round(p2/max*100)}%`,background:ps2.accent}}/></div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <div style={{textAlign:"center",fontSize:12,color:"var(--muted)",marginTop:16,paddingBottom:18}}>
         Parent Version has WhatsApp, consent, admin and full plan access.
