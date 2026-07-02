@@ -56,7 +56,7 @@ const WEEKS = [
   {
     week:1, phase:"Foundation", dates:"Jun 29-Jul 5",
     runs:[
-      {label:"Star Jumps",distance:"50 reps",icon:"⭐",desc:"Complete the target number of star jumps with soft landings and a steady rhythm."},
+      {label:"Run",distance:"1 km",icon:"🏃",desc:"Run, jog or walk 1 km and try to keep moving the whole way."},
       {label:"Lunges",distance:"25 reps",icon:"🦵",desc:"Step forward into each lunge with control, then push back to standing."},
       {label:"Football Solos",distance:"50",icon:"⚽",desc:"Solo the football for the target number, keeping control as you move."}
     ],
@@ -393,6 +393,11 @@ const CSS = `
 }
 body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--dark);min-height:100vh;-webkit-font-smoothing:antialiased}
 .shell{max-width:560px;width:100%;margin:0 auto;padding-bottom:88px}
+
+.run-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.58);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px}
+.run-modal{position:relative;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:white;border-radius:22px;padding:18px;box-shadow:0 24px 80px rgba(0,0,0,0.35)}
+.run-modal-close{position:absolute;top:10px;right:12px;border:0;background:#f8f1f1;color:var(--g);width:34px;height:34px;border-radius:50%;font-size:24px;font-weight:900;line-height:1;cursor:pointer}
+
 @media(min-width:640px){
   .shell{max-width:720px}
   .home-wrap,.admin-wrap,.wk-detail{padding:20px 28px}
@@ -2018,6 +2023,340 @@ function WeekCountdown({ weekNum }) {
   );
 }
 
+
+
+function RunLoggerV1({ week, runIndex, run, taskKey, done, canToggle, onToggle, showToast, player, ps }) {
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState("gps");
+  const [tracking, setTracking] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [startedAt, setStartedAt] = useState(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [points, setPoints] = useState([]);
+  const [manualDistance, setManualDistance] = useState("");
+  const [manualMinutes, setManualMinutes] = useState("");
+  const [manualNote, setManualNote] = useState("");
+  const [lastVoiceKm, setLastVoiceKm] = useState(0);
+  const [history, setHistory] = useState([]);
+  const [savedRun, setSavedRun] = useState(null);
+  const watchRef = useRef(null);
+  const timerRef = useRef(null);
+  const pausedRef = useRef(false);
+
+  const storageKey = `runLog:${APP_SQUAD}:${taskKey}`;
+  const historyKey = `runHistory:${APP_SQUAD}:${player?.id || "unknown"}`;
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+      if (saved) {
+        setSavedRun(saved);
+        setManualDistance(saved.distanceKm ? String(saved.distanceKm) : "");
+        setManualMinutes(saved.durationMin ? String(saved.durationMin) : "");
+        setManualNote(saved.note || "");
+        if (saved.type === "gps" && Array.isArray(saved.points)) setPoints(saved.points);
+      }
+      const h = JSON.parse(localStorage.getItem(historyKey) || "[]");
+      setHistory(Array.isArray(h) ? h : []);
+    } catch (_) {}
+  }, [storageKey, historyKey]);
+
+  useEffect(() => () => stopWatchingOnly(), []);
+
+  function toRad(v) { return (v * Math.PI) / 180; }
+  function distanceBetween(a, b) {
+    const R = 6371;
+    const dLat = toRad(b.lat - a.lat);
+    const dLon = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const x = Math.sin(dLat/2) ** 2 + Math.sin(dLon/2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+  }
+  function totalDistanceKm(list) {
+    return list.slice(1).reduce((sum, p, i) => sum + distanceBetween(list[i], p), 0);
+  }
+  function fmtTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
+  function targetKm() {
+    const raw = String(run.distance || "").toLowerCase();
+    const match = raw.match(/([\d.]+)\s*k/);
+    return match ? Number(match[1]) : null;
+  }
+  function stopWatchingOnly() {
+    if (watchRef.current) {
+      try { navigator.geolocation.clearWatch(watchRef.current); } catch (_) {}
+      watchRef.current = null;
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+  function speak(text) {
+    try {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1;
+      window.speechSynthesis.speak(u);
+    } catch (_) {}
+  }
+  function saveHistory(entry) {
+    try {
+      const next = [entry, ...history].slice(0, 20);
+      setHistory(next);
+      localStorage.setItem(historyKey, JSON.stringify(next));
+    } catch (_) {}
+  }
+  function startGps() {
+    if (!navigator.geolocation) {
+      showToast?.("GPS is not available on this device. Add the run manually instead.");
+      setMode("manual");
+      return;
+    }
+    setPoints([]);
+    setElapsed(0);
+    setPaused(false);
+    pausedRef.current = false;
+    setLastVoiceKm(0);
+    const start = Date.now();
+    setStartedAt(start);
+    setTracking(true);
+    timerRef.current = setInterval(() => {
+      if (!pausedRef.current) setElapsed(v => v + 1);
+    }, 1000);
+    watchRef.current = navigator.geolocation.watchPosition(
+      pos => {
+        if (pausedRef.current) return;
+        const next = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          acc: pos.coords.accuracy,
+          ts: Date.now()
+        };
+        setPoints(prev => {
+          const last = prev[prev.length - 1];
+          if (last && distanceBetween(last, next) < 0.005) return prev;
+          const updated = [...prev, next];
+          const km = totalDistanceKm(updated);
+          const voiceKm = Math.floor(km * 2) / 2;
+          if (voiceKm >= 0.5 && voiceKm > lastVoiceKm) {
+            setLastVoiceKm(voiceKm);
+            speak(`${voiceKm} kilometres completed`);
+          }
+          return updated;
+        });
+      },
+      err => {
+        console.error("Run GPS error", err);
+        showToast?.("GPS could not start. Check location permissions or add manually.");
+        setTracking(false);
+        stopWatchingOnly();
+      },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+    );
+  }
+  function togglePause() {
+    pausedRef.current = !pausedRef.current;
+    setPaused(pausedRef.current);
+    showToast?.(pausedRef.current ? "⏸️ Run paused" : "▶️ Run resumed");
+  }
+  function finishGps() {
+    stopWatchingOnly();
+    setTracking(false);
+    setPaused(false);
+    pausedRef.current = false;
+    const distanceKm = Number(totalDistanceKm(points).toFixed(2));
+    const durationMin = Math.max(1, Math.round(elapsed / 60));
+    const saved = {
+      type: "gps",
+      week,
+      taskKey,
+      label: run.label,
+      target: run.distance,
+      distanceKm,
+      durationMin,
+      pace: distanceKm > 0 ? Number((durationMin / distanceKm).toFixed(2)) : null,
+      points,
+      savedAt: new Date().toISOString()
+    };
+    setSavedRun(saved);
+    setSavedRun(saved);
+    try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch (_) {}
+    saveHistory(saved);
+    setManualDistance(String(distanceKm));
+    setManualMinutes(String(durationMin));
+    const target = targetKm();
+    if (target && distanceKm >= target) speak("Target achieved. Great running.");
+    const meetsTarget = !target || distanceKm >= target;
+    showToast?.(meetsTarget
+      ? `🏃 Run saved: ${distanceKm} km in ${durationMin} min`
+      : `Run saved, but target is ${target} km. It will not count yet.`);
+    if (meetsTarget && !done && canToggle) onToggle(taskKey, PTS.run, `${run.icon || "🏃"} ${run.label} (${run.distance})`);
+  }
+  function saveManual() {
+    const distanceKm = Number(manualDistance);
+    const durationMin = Number(manualMinutes);
+    if (!distanceKm || distanceKm <= 0) {
+      showToast?.("Enter the distance completed.");
+      return;
+    }
+    if (!durationMin || durationMin <= 0) {
+      showToast?.("Enter the time taken.");
+      return;
+    }
+    const saved = {
+      type: "manual",
+      week,
+      taskKey,
+      label: run.label,
+      target: run.distance,
+      distanceKm,
+      durationMin,
+      pace: distanceKm > 0 ? Number((durationMin / distanceKm).toFixed(2)) : null,
+      note: manualNote,
+      savedAt: new Date().toISOString()
+    };
+    try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch (_) {}
+    saveHistory(saved);
+    const target = targetKm();
+    const meetsTarget = !target || distanceKm >= target;
+    showToast?.(meetsTarget
+      ? `🏃 Run logged: ${distanceKm} km in ${durationMin} min`
+      : `Run saved, but target is ${target} km. It will not count yet.`);
+    if (meetsTarget && !done && canToggle) onToggle(taskKey, PTS.run, `${run.icon || "🏃"} ${run.label} (${run.distance})`);
+  }
+  function shareWhatsApp() {
+    const msg = `${player?.name || "Player"} completed ${manualDistance || distanceKm} km in ${manualMinutes || Math.max(1, Math.round(elapsed/60))} min for Week ${week} ${run.label}! 🏃`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  }
+
+  const distanceKm = Number(totalDistanceKm(points).toFixed(2));
+  const target = targetKm();
+  const targetHit = target ? distanceKm >= target : false;
+  const pace = distanceKm > 0 && elapsed > 0 ? `${Math.floor((elapsed/60)/distanceKm)}:${String(Math.round(((elapsed/60)/distanceKm % 1)*60)).padStart(2,"0")} /km` : "—";
+  const personalBest = history.filter(h => h.distanceKm >= 1 && h.durationMin).sort((a,b) => (a.durationMin/a.distanceKm) - (b.durationMin/b.distanceKm))[0];
+
+  return (
+    <>
+      <div
+        className={`run-chip${done?" done":""}`}
+        style={!done && ps ? {background:ps.chip,color:ps.accent,borderColor:"transparent"} : {}}
+        onClick={(e)=>{ e.stopPropagation(); if (canToggle) setOpen(true); }}
+      >
+        {run.icon || "🏃"} {run.label}: {run.distance} {done?"✓":""}
+      </div>
+
+      {open && (
+        <div className="run-modal-backdrop" onClick={() => !tracking && setOpen(false)}>
+          <div className="run-modal" onClick={e=>e.stopPropagation()}>
+            <button className="run-modal-close" onClick={() => {
+              if (tracking) {
+                showToast?.("Finish or pause the run before closing.");
+                return;
+              }
+              setOpen(false);
+            }}>×</button>
+
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:28,color:"var(--g)",letterSpacing:"0.02em"}}>RUN LOGGER</div>
+            <div style={{fontSize:12,color:"var(--muted)",lineHeight:1.45,margin:"4px 0 12px"}}>
+              Week {week} · {run.label} · Target {run.distance}. Track with GPS or add manually. The route preview stays on this device.
+            </div>
+
+            <div style={{background:"#fff7e0",border:"1px solid #f4df9b",borderRadius:12,padding:10,fontSize:12,fontWeight:800,color:"#6d5200",lineHeight:1.4,marginBottom:12}}>
+              🦺 Safety first: run with an adult, choose a safe route, and avoid roads where possible.
+            </div>
+
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <button onClick={()=>setMode("gps")} style={{flex:1,border:"1px solid #ead7d7",background:mode==="gps"?"var(--g)":"#fff",color:mode==="gps"?"#fff":"var(--g)",borderRadius:10,padding:"9px 10px",fontWeight:900,fontFamily:"inherit"}}>GPS</button>
+              <button onClick={()=>setMode("manual")} style={{flex:1,border:"1px solid #ead7d7",background:mode==="manual"?"var(--g)":"#fff",color:mode==="manual"?"#fff":"var(--g)",borderRadius:10,padding:"9px 10px",fontWeight:900,fontFamily:"inherit"}}>Manual</button>
+            </div>
+
+            {mode === "gps" ? (
+              <div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:10}}>
+                  <div style={{background:"#f8f1f1",borderRadius:10,padding:8,textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"var(--g)"}}>{distanceKm}</div><div style={{fontSize:10,color:"var(--muted)"}}>km</div></div>
+                  <div style={{background:"#f8f1f1",borderRadius:10,padding:8,textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"var(--g)"}}>{fmtTime(elapsed)}</div><div style={{fontSize:10,color:"var(--muted)"}}>time</div></div>
+                  <div style={{background:"#f8f1f1",borderRadius:10,padding:8,textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"var(--g)"}}>{pace}</div><div style={{fontSize:10,color:"var(--muted)"}}>pace</div></div>
+                </div>
+
+                <div style={{height:190,borderRadius:14,background:"linear-gradient(135deg,#e8f5e9,#f8f1f1)",position:"relative",overflow:"hidden",marginBottom:10,border:"1px solid #e5d4d4"}}>
+                  {points.length > 1 ? (
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{position:"absolute",inset:0,width:"100%",height:"100%"}}>
+                      {(() => {
+                        const lats = points.map(p=>p.lat), lngs = points.map(p=>p.lng);
+                        const minLat=Math.min(...lats), maxLat=Math.max(...lats), minLng=Math.min(...lngs), maxLng=Math.max(...lngs);
+                        const pad=8;
+                        const coords = points.map(p => {
+                          const x = maxLng===minLng ? 50 : pad + ((p.lng-minLng)/(maxLng-minLng))*(100-pad*2);
+                          const y = maxLat===minLat ? 50 : pad + ((maxLat-p.lat)/(maxLat-minLat))*(100-pad*2);
+                          return `${x},${y}`;
+                        }).join(" ");
+                        return <polyline points={coords} fill="none" stroke="var(--g)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />;
+                      })()}
+                    </svg>
+                  ) : (
+                    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",color:"var(--muted)",fontWeight:800,fontSize:13,textAlign:"center",padding:20}}>
+                      Start GPS to draw your route preview here.
+                    </div>
+                  )}
+                  <div style={{position:"absolute",left:10,bottom:8,fontSize:10,color:"var(--muted)",fontWeight:800}}>Screenshot-friendly route preview</div>
+                  {targetHit && <div style={{position:"absolute",right:10,top:10,background:"#2e7d32",color:"#fff",borderRadius:999,padding:"5px 9px",fontSize:11,fontWeight:900}}>🏅 Target achieved</div>}
+                </div>
+
+                <div style={{display:"grid",gridTemplateColumns:tracking?"1fr 1fr":"1fr",gap:8}}>
+                  {tracking && <button onClick={togglePause} style={{border:0,background:"#ff9800",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>{paused ? "▶ RESUME" : "⏸ PAUSE"}</button>}
+                  <button onClick={tracking ? finishGps : startGps} style={{border:0,background:tracking?"#c62828":"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>
+                    {tracking ? "■ FINISH RUN" : "▶ START GPS RUN"}
+                  </button>
+                </div>
+                {target && <div style={{fontSize:11,color:targetHit?"#2e7d32":"var(--muted)",marginTop:8,fontWeight:800}}>{targetHit ? "✅ Target distance reached" : `Target: ${target} km`}</div>}
+              </div>
+            ) : (
+              <div style={{display:"grid",gap:8}}>
+                <input value={manualDistance} onChange={e=>setManualDistance(e.target.value)} placeholder="Distance completed in km, e.g. 1.5" inputMode="decimal" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
+                <input value={manualMinutes} onChange={e=>setManualMinutes(e.target.value)} placeholder="Time taken in minutes, e.g. 12" inputMode="numeric" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
+                <input value={manualNote} onChange={e=>setManualNote(e.target.value)} placeholder="Optional note, e.g. ran with Dad" style={{padding:"10px 12px",border:"1px solid #ead7d7",borderRadius:10,fontFamily:"inherit"}} />
+                <button onClick={saveManual} style={{border:0,background:"var(--g)",color:"#fff",borderRadius:12,padding:"11px 12px",fontWeight:900,fontFamily:"inherit"}}>✓ SAVE RUN</button>
+              </div>
+            )}
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:12}}>
+              <button onClick={shareWhatsApp} style={{border:"1px solid #25D366",background:"#e8f5e9",color:"#16783a",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>💬 Share text</button>
+              <button onClick={() => showToast?.("Take a screenshot of this screen and post it in WhatsApp.")} style={{border:"1px solid #ead7d7",background:"#fff",color:"var(--g)",borderRadius:12,padding:"10px 12px",fontWeight:900,fontFamily:"inherit"}}>📸 Screenshot</button>
+            </div>
+
+            {personalBest && (
+              <div style={{marginTop:12,background:"#f8f1f1",borderRadius:12,padding:10,fontSize:12,color:"var(--ink)",fontWeight:800}}>
+                🏆 Personal best pace: {(personalBest.durationMin / personalBest.distanceKm).toFixed(1)} min/km
+              </div>
+            )}
+
+            {history.length > 0 && (
+              <div style={{marginTop:12}}>
+                <div style={{fontSize:11,fontWeight:900,color:"var(--muted)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>Recent runs on this device</div>
+                <div style={{display:"grid",gap:6,maxHeight:110,overflow:"auto"}}>
+                  {history.slice(0,4).map((h,i)=>(
+                    <div key={i} style={{fontSize:12,background:"#fff",border:"1px solid #f0dede",borderRadius:10,padding:"7px 9px",display:"flex",justifyContent:"space-between",gap:8}}>
+                      <span>{h.distanceKm} km · {h.durationMin} min</span>
+                      <span style={{color:"var(--muted)"}}>{new Date(h.savedAt).toLocaleDateString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
 function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToast }) {
   const [expandedSkill, setExpandedSkill] = useState(null);
   const [expandedSquad, setExpandedSquad] = useState(false);
@@ -2041,11 +2380,27 @@ function WeekDetail({ w, ps, pct, wPts, wMax, checks, onToggle, player, showToas
               const k = runKey(w.week, i);
               const done = isApproved(checks[k]);
               return (
-                <div key={i} className={`run-chip${done?" done":""}`}
-                  style={!done?{background:ps.chip,color:ps.accent,borderColor:"transparent"}:{}}
-                  onClick={()=>canToggle&&onToggle(k,PTS.run,`${r.icon || "🏃"} ${r.label} (${r.distance})`)}>
-                  {r.icon || "🏃"} {r.label}: {r.distance} {done?"✓":""}
-                </div>
+                /run/i.test(r.label || "") ? (
+                  <RunLoggerV1
+                    key={i}
+                    week={w.week}
+                    runIndex={i}
+                    run={r}
+                    taskKey={k}
+                    done={done}
+                    canToggle={canToggle}
+                    onToggle={onToggle}
+                    showToast={showToast}
+                    player={player}
+                    ps={ps}
+                  />
+                ) : (
+                  <div key={i} className={`run-chip${done?" done":""}`}
+                    style={!done?{background:ps.chip,color:ps.accent,borderColor:"transparent"}:{}}
+                    onClick={()=>canToggle&&onToggle(k,PTS.run,`${r.icon || "🏃"} ${r.label} (${r.distance})`)}>
+                    {r.icon || "🏃"} {r.label}: {r.distance} {done?"✓":""}
+                  </div>
+                )
               );
             })}
           </div>
