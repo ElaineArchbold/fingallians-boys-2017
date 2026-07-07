@@ -4,13 +4,25 @@ const NEW_APP_URL = "https://fingallians-shared-platform.vercel.app/";
 const LOGO = "/favicon.png";
 
 export default function App() {
-  const [seconds, setSeconds] = useState(15);
+  const [seconds, setSeconds] = useState(3);
+
+  function goToNewApp() {
+    localStorage.setItem("redirect_seen", "true");
+    window.location.replace(NEW_APP_URL);
+  }
+
+  useEffect(() => {
+    if (localStorage.getItem("redirect_seen")) {
+      window.location.replace(NEW_APP_URL);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setSeconds((current) => {
         if (current <= 1) {
           clearInterval(timer);
+          localStorage.setItem("redirect_seen", "true");
           window.location.replace(NEW_APP_URL);
           return 0;
         }
@@ -104,7 +116,8 @@ export default function App() {
           </p>
 
           <p style={{ margin: "12px 0", fontSize: 17 }}>
-            👨‍👩‍👧 Parents should continue using the <strong>same email address</strong>.
+            👨‍👩‍👧 Parents should continue using the{" "}
+            <strong>same email address</strong>.
           </p>
 
           <p style={{ margin: "12px 0", fontSize: 17 }}>
@@ -112,12 +125,13 @@ export default function App() {
           </p>
 
           <p style={{ margin: "12px 0", fontSize: 17 }}>
-            ❤️ Once you've created your password your linked children will appear automatically.
+            ❤️ Once you've created your password your linked children will
+            appear automatically.
           </p>
         </div>
 
         <button
-          onClick={() => window.location.replace(NEW_APP_URL)}
+          onClick={goToNewApp}
           style={{
             width: "100%",
             padding: "18px",
